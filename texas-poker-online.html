@@ -1029,6 +1029,15 @@ document.getElementById('btn-start').addEventListener('click', function(){
   if(!isHost) return;
   fbGet(roomPath+'/players', function(ps){
     var arr = Object.values(ps||{}).sort(function(a,b){return a.seat-b.seat;});
+    // 重複名チェック（CPUを除く）
+    var names = arr.map(function(p){return p.name.trim().toLowerCase();});
+    var hasDup = names.some(function(n,i){return names.indexOf(n)!==i;});
+    if(hasDup){
+      var rmsg=document.getElementById('room-msg');
+      rmsg.textContent='⚠ 重複する名前があります。解消してからゲームを開始してください。';
+      rmsg.style.color='#f88';
+      return;
+    }
     var seats={};arr.forEach(function(p,i){seats[p.id]=i;});
     fbPatch(roomPath, {status:'started', seats:seats}, function(){ launchGame(null); });
   });
@@ -1136,7 +1145,13 @@ function onState(st){
   if(st.reveal) Object.keys(st.reveal).forEach(function(i){if(players[i])players[i].hole=st.reveal[i];});
   renderAll();
   if(st.showdown){handleSD(st.showdown);return;}
-  if(st.result){handleResult(st.result);return;}
+  if(st.result){
+    // 送信中...等の表示を隠してからモーダル表示
+    hideInfo();
+    document.getElementById('ap').style.display='none';
+    handleResult(st.result);
+    return;
+  }
   if(st.waitFor===myId){
     hideInfo(); document.getElementById('ap').style.display='block'; renderAction();
   } else {
@@ -1322,10 +1337,15 @@ function handleResult(rr){
   if(!rr||!rr.title)return;
   renderAll();
   if(rr.gameOver){
-    // ゲーム終了 → ロビーへ
+    // ゲーム終了 → 全員にモーダル表示してロビーへ
     showMsg(rr.title,rr.body,'ロビーへ戻る',function(){
+      // Firebase polls停止
+      Object.keys(_polls).forEach(function(k){fbOff(k);});
       document.getElementById('back-btn-wrap').style.display='none';
       offlineMode=false;
+      // ibar非表示
+      hideInfo();
+      document.getElementById('ap').style.display='none';
       window._pokerShowScreen('screen-lobby');
     },rr.ch||'');
   } else {
