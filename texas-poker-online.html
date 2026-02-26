@@ -46,14 +46,14 @@ body{background:radial-gradient(ellipse at 50%,#1e5535 0%,#0a2010 100%);min-heig
 #comm-cards{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
 #pot{font-family:Cinzel,serif;font-size:12px;color:var(--gold-light);background:rgba(0,0,0,.4);padding:4px 16px;border-radius:20px;border:1px solid rgba(201,168,76,.3);}
 #phase{font-family:Cinzel,serif;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.35);}
-#seats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;width:100%;max-width:700px;margin:0 auto 8px;}
-.seat{background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:8px;text-align:center;position:relative;}
+#seats{display:flex;flex-wrap:wrap;gap:6px;width:100%;max-width:700px;margin:0 auto 8px;justify-content:center;}
+.seat{background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:8px;text-align:center;position:relative;flex:1 1 140px;max-width:200px;min-width:130px;box-sizing:border-box;}
 .seat.myturn{border-color:var(--gold);background:rgba(201,168,76,.12);box-shadow:0 0 18px rgba(201,168,76,.3);}
 .seat.waiting{border-color:#fa0;animation:wp .9s infinite alternate;}
 @keyframes wp{from{box-shadow:0 0 6px rgba(255,165,0,.2);}to{box-shadow:0 0 20px rgba(255,165,0,.5);}}
 .seat.folded{opacity:.4;}
 .seat.dealer::before{content:'D';position:absolute;top:-8px;left:-8px;width:19px;height:19px;background:var(--gold);color:#000;border-radius:50%;font-family:Cinzel,serif;font-size:9px;font-weight:700;line-height:19px;text-align:center;}
-.sname{font-family:Cinzel,serif;font-size:10px;color:var(--gold-light);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sname{font-family:Cinzel,serif;font-size:10px;color:var(--gold-light);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
 .schips{font-size:11px;color:rgba(255,255,255,.65);}
 .sbet{font-size:10px;color:#f0d080;min-height:14px;}
 .scards{display:flex;gap:3px;justify-content:center;margin-top:4px;}
@@ -224,6 +224,22 @@ letter-spacing:6px;margin-bottom:6px;}
     <div class="ptitle">🏠 ルームを作成</div>
     <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">SB</span><input class="num-inp" id="room-sb" value="5"></div>
     <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">BB</span><input class="num-inp" id="room-bb" value="10"></div>
+    <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">CPU人数</span>
+      <div style="display:flex;gap:6px;">
+        <button class="online-cpu-btn" data-n="0" style="padding:5px 10px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">0</button>
+        <button class="online-cpu-btn" data-n="1" style="padding:5px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">1</button>
+        <button class="online-cpu-btn" data-n="2" style="padding:5px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">2</button>
+        <button class="online-cpu-btn" data-n="3" style="padding:5px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">3</button>
+        <button class="online-cpu-btn" data-n="4" style="padding:5px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">4</button>
+      </div>
+    </div>
+    <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">難易度</span>
+      <div style="display:flex;gap:6px;">
+        <button class="online-diff-btn" data-d="easy" style="padding:5px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">EASY</button>
+        <button class="online-diff-btn" data-d="normal" style="padding:5px 9px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">NORMAL</button>
+        <button class="online-diff-btn" data-d="hard" style="padding:5px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">HARD</button>
+      </div>
+    </div>
     <button class="btn" id="btn-create">ルームを作成</button>
     <div id="room-created" style="display:none;margin-top:14px;">
       <div class="slabel">ルームコード（タップでコピー）</div>
@@ -641,6 +657,27 @@ function setMode(mode){
 
 // モードボタン設定
 document.getElementById('btn-mode-offline').onclick = function(){ setMode('offline'); };
+
+// オンラインCPU設定
+var onlineCpuCount=0, onlineCpuDifficulty='normal';
+document.querySelectorAll('.online-cpu-btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    onlineCpuCount=+this.dataset.n;
+    document.querySelectorAll('.online-cpu-btn').forEach(function(x){
+      x.style.background='rgba(0,0,0,.4)';x.style.borderColor='rgba(255,255,255,.2)';x.style.color='rgba(255,255,255,.5)';
+    });
+    this.style.background='rgba(201,168,76,.15)';this.style.borderColor='var(--gold)';this.style.color='var(--gold-light)';
+  });
+});
+document.querySelectorAll('.online-diff-btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    onlineCpuDifficulty=this.dataset.d;
+    document.querySelectorAll('.online-diff-btn').forEach(function(x){
+      x.style.background='rgba(0,0,0,.4)';x.style.borderColor='rgba(255,255,255,.2)';x.style.color='rgba(255,255,255,.5)';
+    });
+    this.style.background='rgba(201,168,76,.15)';this.style.borderColor='var(--gold)';this.style.color='var(--gold-light)';
+  });
+});
 // ロビーボタンのonclickはHTML側で定義済み
 document.getElementById('btn-mode-online').onclick = function(){
   var el = document.getElementById('conn-badge');
@@ -937,7 +974,7 @@ document.getElementById('btn-create').addEventListener('click', function(){
   var code = genCode();
   roomPath = 'rooms/'+code;
   isHost = true;
-  var data = {code:code,SB:SB,BB:BB,status:'waiting',hostId:myId,createdAt:Date.now(),players:{}};
+  var data = {code:code,SB:SB,BB:BB,status:'waiting',hostId:myId,createdAt:Date.now(),cpuCount:onlineCpuCount,cpuDifficulty:onlineCpuDifficulty,players:{}};
   data.players[myId] = {id:myId,name:myName,chips:myChips,seat:0};
   fbSet(roomPath, data, function(){
     document.getElementById('room-created').style.display='block';
@@ -1032,15 +1069,32 @@ function _launch(room){
   var arr=Object.values(room.players||{}).sort(function(a,b){return(seats[a.id]||0)-(seats[b.id]||0);});
   players=arr.map(function(p,i){
     if(p.id===myId) myIdx=i;
-    return{name:p.name,chips:p.chips,pid:p.id,isMe:p.id===myId,idx:i,
+    return{name:p.name,chips:p.chips,pid:p.id,isMe:p.id===myId,idx:i,isCpu:false,
            hole:[],bet:0,totalBet:0,folded:false,allIn:false,active:true};
   });
+  // CPUプレイヤーを追加（ホストの設定に従う）
+  var cpuCnt=room.cpuCount||0;
+  cpuDifficulty=room.cpuDifficulty||'normal';
+  for(var ci=0;ci<cpuCnt;ci++){
+    var idx=players.length;
+    players.push({name:CPU_NAMES[ci],chips:arr[0]?arr[0].chips:500,pid:'cpu'+ci,isMe:false,idx:idx,isCpu:true,
+                  hole:[],bet:0,totalBet:0,folded:false,allIn:false,active:true});
+  }
   gamePath = roomPath+'/game';
   holePfx  = roomPath+'/holes/';
   showScreen('screen-game');
   fbListen(gamePath+'/state', onState);
+  var _dealShown=false;
   fbListen(holePfx+myId, function(h){
-    if(h&&h.length===2){myHole=h;if(players[myIdx])players[myIdx].hole=h;renderAll();}
+    if(!h||h.length!==2) return;
+    var isNew=(JSON.stringify(h)!==JSON.stringify(myHole));
+    myHole=h;
+    if(players[myIdx]) players[myIdx].hole=h;
+    renderAll();
+    // 新しいホールカード受信時のみディール演出
+    if(isNew && !isHost){
+      showDealOverlay(myHole, function(){});
+    }
   });
   if(isHost){ watchAction(); startRound(); }
   else showInfo('ホストのゲーム開始を待っています...');
@@ -1065,7 +1119,8 @@ function onState(st){
   if(st.waitFor===myId){
     hideInfo(); document.getElementById('ap').style.display='block'; renderAction();
   } else {
-    showInfo((players[curIdx]?players[curIdx].name:'?')+'のアクションを待っています...');
+    var curP=players[curIdx];
+    showInfo((curP?curP.name:'?')+'のアクションを待っています...');
     document.getElementById('ap').style.display='none';
   }
 }
@@ -1098,13 +1153,34 @@ function startRound(){
   while(!players[dealerIdx].active) dealerIdx=(dealerIdx+1)%players.length;
   active.forEach(function(p){
     var h=[deck.pop(),deck.pop()]; p.hole=h;
-    fbSet(holePfx+p.pid, h);
+    if(!p.isCpu) fbSet(holePfx+p.pid, h);
     if(p.isMe) myHole=h;
   });
   var sb=nxt(dealerIdx), bb=nxt(sb);
   blind(players[sb],SB); blind(players[bb],BB);
   curBet=BB; lastRaise=BB; curIdx=nxt(bb); acts=[players[sb].idx];
-  pushState({waitFor:players[curIdx].pid});
+  // ディール演出（自分のホール）
+  var firstWaitFor=players[curIdx]?players[curIdx].pid:null;
+  if(myHole.length===2){
+    showDealOverlay(myHole, function(){
+      // CPU先行ターンの場合は演出後すぐにCPU処理
+      var firstP=players[curIdx];
+      if(firstP&&firstP.isCpu){
+        showInfo(firstP.name+' が考えています...');
+        showCpuThinking(firstP,function(){
+          var dec=cpuDecide(firstP,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
+          applyCpuAction(firstP,dec);
+          showActionBubble(curIdx,dec.action,dec.amount||0);
+          renderAll();
+          setTimeout(function(){advance();},400);
+        });
+      } else {
+        pushState({waitFor:firstWaitFor});
+      }
+    });
+  } else {
+    pushState({waitFor:firstWaitFor});
+  }
 }
 
 function blind(p,a){var x=Math.min(a,p.chips);p.chips-=x;p.bet+=x;p.totalBet+=x;pot+=x;if(!p.chips)p.allIn=true;}
@@ -1127,7 +1203,20 @@ function advance(){
   var ca=players.filter(function(p){return p.active&&!p.folded&&!p.allIn;});
   if(ca.length<=1||(ca.every(function(p){return acts.indexOf(p.idx)>=0;})&&ca.every(function(p){return p.bet===curBet;}))){nextPhase();return;}
   curIdx=nxt(curIdx);
-  pushState({waitFor:players[curIdx].pid});
+  var curP=players[curIdx];
+  // CPUのターンはホスト側で直接処理（pushState不要）
+  if(isHost && curP && curP.isCpu && !curP.folded && !curP.allIn){
+    showInfo(curP.name+' が考えています...');
+    showCpuThinking(curP, function(){
+      var dec=cpuDecide(curP,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
+      applyCpuAction(curP,dec);
+      showActionBubble(curIdx,dec.action,dec.amount||0);
+      renderAll();
+      setTimeout(function(){ advance(); },400);
+    });
+  } else {
+    pushState({waitFor:curP?curP.pid:null});
+  }
 }
 
 function nextPhase(){
@@ -1146,8 +1235,13 @@ function nextPhase(){
 
 function doShowdown(){
   var cont=players.filter(function(p){return p.active&&!p.folded;});
-  var pending=cont.length, holes={};
-  cont.forEach(function(p){
+  var holes={};
+  // CPUは直接holeを使用、人間プレイヤーはFirebaseから取得
+  var humanCont=cont.filter(function(p){return !p.isCpu;});
+  cont.forEach(function(p){if(p.isCpu&&p.hole)holes[p.idx]=p.hole;});
+  if(humanCont.length===0){finishSD(cont,holes);return;}
+  var pending=humanCont.length;
+  humanCont.forEach(function(p){
     fbGet(holePfx+p.pid, function(h){
       if(h) holes[p.idx]=h;
       if(--pending===0) finishSD(cont,holes);
