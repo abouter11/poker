@@ -994,18 +994,34 @@ function watchLobby(){
     var ps = room.players||{};
     renderPlist(ps);
     var n = Object.keys(ps).length;
+    // 重複名チェック
+    var names = Object.values(ps).map(function(p){return p.name.trim().toLowerCase();});
+    var hasDup = names.some(function(name,i){return names.indexOf(name)!==i;});
     var btn = document.getElementById('btn-start');
-    btn.disabled = n<2;
-    btn.textContent = n>=2 ? 'ゲーム開始（'+n+'人）' : '参加者を待っています...';
-    document.getElementById('room-msg').textContent = n+'人が参加中';
+    var rmsg = document.getElementById('room-msg');
+    if(hasDup){
+      btn.disabled = true;
+      btn.textContent = '名前が重複しています';
+      rmsg.textContent = '⚠ 重複する名前があります。参加者に変更を依頼してください。';
+      rmsg.style.color='#f88';
+    } else {
+      btn.disabled = n<2;
+      btn.textContent = n>=2 ? 'ゲーム開始（'+n+'人）' : '参加者を待っています...';
+      rmsg.textContent = n+'人が参加中';
+      rmsg.style.color='';
+    }
     if(room.status==='started' && !isHost) launchGame(room);
   });
 }
 
 function renderPlist(ps){
   var el=document.getElementById('plist'); el.innerHTML='';
-  Object.values(ps).sort(function(a,b){return a.seat-b.seat;}).forEach(function(p){
-    el.innerHTML+='<div class="pitem"><div class="dot"></div><span>'+p.name+(p.id===myId?' (あなた)':'')+'</span>'+(p.seat===0?'<div class="htag">HOST</div>':'')+'</div>';
+  var arr=Object.values(ps).sort(function(a,b){return a.seat-b.seat;});
+  var names=arr.map(function(p){return p.name.trim().toLowerCase();});
+  arr.forEach(function(p){
+    var isDup=names.filter(function(n){return n===p.name.trim().toLowerCase();}).length>1;
+    var warn=isDup?'<span style="color:#f88;font-size:9px;margin-left:4px;">⚠重複</span>':'';
+    el.innerHTML+='<div class="pitem"><div class="dot" style="background:'+(isDup?'#f88':'')+'"></div><span style="color:'+(isDup?'#f88':'')+'">'+p.name+(p.id===myId?' (あなた)':'')+'</span>'+warn+(p.seat===0?'<div class="htag">HOST</div>':'')+'</div>';
   });
 }
 
@@ -1034,6 +1050,11 @@ function doJoin(){
   fbGet('rooms/'+code, function(room){
     if(!room){setJM('ルームが見つかりません','err');return;}
     if(room.status==='started'){setJM('ゲームはすでに開始しています','err');return;}
+    // 名前重複チェック
+    var existingNames = Object.values(room.players||{}).map(function(p){return p.name.trim().toLowerCase();});
+    if(existingNames.indexOf(myName.trim().toLowerCase())>=0){
+      setJM('「'+myName+'」は既に使われています。別の名前を入力してください。','err');return;
+    }
     isHost=false; roomPath='rooms/'+code; SB=room.SB; BB=room.BB;
     var seat = Object.keys(room.players||{}).length;
     var patch={}; patch[myId]={id:myId,name:myName,chips:myChips,seat:seat};
@@ -1146,9 +1167,18 @@ function pushState(extra){
 
 function startRound(){
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
-  players.forEach(function(p){if(p.chips<5)p.active=false;p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;});
+  // チップ不足で脱落判定（BBに届かない場合）
+  players.forEach(function(p){
+    if(p.active && p.chips < BB) { p.active=false; p.eliminated=true; }
+    p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;
+  });
   var active=players.filter(function(p){return p.active;});
-  if(active.length<2){var w=active[0];pushState({result:{title:'ゲーム終了',body:'<span class="wn">'+(w?w.name:'?')+'</span>の優勝！',ch:''}});return;}
+  if(active.length<2){
+    var w=active[0];
+    var elimBody='<span class="wn">'+(w?w.name:'?')+'</span>の優勝！<br><small style="color:rgba(255,255,255,.5)">他のプレイヤーが全員脱落しました</small>';
+    pushState({result:{title:'ゲーム終了',body:elimBody,ch:'',gameOver:true}});
+    return;
+  }
   dealerIdx=(dealerIdx+1)%players.length;
   while(!players[dealerIdx].active) dealerIdx=(dealerIdx+1)%players.length;
   active.forEach(function(p){
@@ -1280,8 +1310,31 @@ function finishSD(cont,holes){
   pushState({showdown:{body:body,ch:ch},reveal:holes,waitFor:null});
 }
 
-function handleSD(sd){if(!sd)return;renderAll();showMsg('ショーダウン',sd.body,'次のラウンド',function(){if(isHost)startRound();else showInfo('次のラウンドを待っています...');},sd.ch||'');}
-function handleResult(rr){if(!rr||!rr.title)return;renderAll();showMsg(rr.title,rr.body,'次のラウンド',function(){if(isHost)startRound();else showInfo('次のラウンドを待っています...');},rr.ch||'');}
+function handleSD(sd){
+  if(!sd)return;
+  renderAll();
+  showMsg('ショーダウン',sd.body,'次のラウンド',function(){
+    if(isHost) startRound();
+    else showInfo('次のラウンドを待っています...');
+  },sd.ch||'');
+}
+function handleResult(rr){
+  if(!rr||!rr.title)return;
+  renderAll();
+  if(rr.gameOver){
+    // ゲーム終了 → ロビーへ
+    showMsg(rr.title,rr.body,'ロビーへ戻る',function(){
+      document.getElementById('back-btn-wrap').style.display='none';
+      offlineMode=false;
+      window._pokerShowScreen('screen-lobby');
+    },rr.ch||'');
+  } else {
+    showMsg(rr.title,rr.body,'次のラウンド',function(){
+      if(isHost) startRound();
+      else showInfo('次のラウンドを待っています...');
+    },rr.ch||'');
+  }
+}
 
 // ════════════════════════════════════════
 // アクションUI
