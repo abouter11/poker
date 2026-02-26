@@ -1154,6 +1154,10 @@ function onState(st){
   }
   if(st.waitFor===myId){
     hideInfo(); document.getElementById('ap').style.display='block'; renderAction();
+  } else if(st.waitFor==='__cpu__'){
+    var cpuP=players[curIdx];
+    showInfo((cpuP?cpuP.name:'CPU')+' が考えています...');
+    document.getElementById('ap').style.display='none';
   } else {
     var curP=players[curIdx];
     showInfo((curP?curP.name:'?')+'のアクションを待っています...');
@@ -1208,20 +1212,8 @@ function startRound(){
   var firstWaitFor=players[curIdx]?players[curIdx].pid:null;
   if(myHole.length===2){
     showDealOverlay(myHole, function(){
-      // CPU先行ターンの場合は演出後すぐにCPU処理
-      var firstP=players[curIdx];
-      if(firstP&&firstP.isCpu){
-        showInfo(firstP.name+' が考えています...');
-        showCpuThinking(firstP,function(){
-          var dec=cpuDecide(firstP,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
-          applyCpuAction(firstP,dec);
-          showActionBubble(curIdx,dec.action,dec.amount||0);
-          renderAll();
-          setTimeout(function(){advance();},400);
-        });
-      } else {
-        pushState({waitFor:firstWaitFor});
-      }
+      // advance()がCPUターンを自動処理するのでpushStateするだけ
+      pushState({waitFor:firstWaitFor});
     });
   } else {
     pushState({waitFor:firstWaitFor});
@@ -1249,14 +1241,17 @@ function advance(){
   if(ca.length<=1||(ca.every(function(p){return acts.indexOf(p.idx)>=0;})&&ca.every(function(p){return p.bet===curBet;}))){nextPhase();return;}
   curIdx=nxt(curIdx);
   var curP=players[curIdx];
-  // CPUのターンはホスト側で直接処理（pushState不要）
+  // CPUのターン：ホストが処理しpushStateで全員に通知
   if(isHost && curP && curP.isCpu && !curP.folded && !curP.allIn){
     showInfo(curP.name+' が考えています...');
+    // まずCPUのターンをpushStateして全員の画面に「CPU思考中」を表示
+    pushState({waitFor:'__cpu__'});
     showCpuThinking(curP, function(){
       var dec=cpuDecide(curP,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
       applyCpuAction(curP,dec);
       showActionBubble(curIdx,dec.action,dec.amount||0);
       renderAll();
+      // CPUアクション後に状態をpushして次のターンへ
       setTimeout(function(){ advance(); },400);
     });
   } else {
