@@ -9,72 +9,73 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
 :root{--gold:#c9a84c;--gold-light:#f0d080;--gold-dark:#8a6820;--felt:#1a4a2e;--felt-dark:#0d2e1c;--felt-light:#235c39;--red:#c0392b;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{background:radial-gradient(ellipse at 50%,#1e5535 0%,#0a2010 100%);min-height:100vh;font-family:'Crimson Text',serif;color:#fff;overflow-x:hidden;}
+body{background:radial-gradient(ellipse at 50%,#1e5535 0%,#0a2010 100%);min-height:100vh;font-family:serif;color:#fff;overflow-x:hidden;}
 .screen{display:none;min-height:100vh;flex-direction:column;align-items:center;padding:20px 16px 40px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .screen.active{display:flex;}
-.logo{font-family:'Cinzel',serif;font-size:clamp(20px,6vw,44px);font-weight:900;background:linear-gradient(135deg,#8a6820,#f0d080,#c9a84c,#f0d080,#8a6820);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px;text-align:center;margin:16px 0 4px;}
-.logo-sub{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:6px;text-align:center;margin-bottom:12px;opacity:.7;}
-.badge{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:4px 14px;border-radius:20px;margin-bottom:14px;text-align:center;}
+.logo{font-family:Cinzel,serif;font-size:clamp(20px,6vw,44px);font-weight:900;background:linear-gradient(135deg,#8a6820,#f0d080,#c9a84c,#f0d080,#8a6820);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px;text-align:center;margin:16px 0 4px;}
+.logo-sub{font-family:Cinzel,serif;font-size:11px;color:var(--gold);letter-spacing:6px;text-align:center;margin-bottom:12px;opacity:.7;}
+.badge{font-family:Cinzel,serif;font-size:10px;letter-spacing:2px;padding:4px 14px;border-radius:20px;margin-bottom:14px;text-align:center;}
 .b-ok{color:#0f0;background:rgba(0,200,0,.12);border:1px solid rgba(0,200,0,.3);}
 .b-info{color:#4af;background:rgba(0,150,255,.12);border:1px solid rgba(0,150,255,.3);}
 .b-err{color:#f88;background:rgba(255,60,60,.12);border:1px solid rgba(255,60,60,.3);}
 .panel{background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:20px;width:100%;max-width:480px;margin-bottom:14px;}
-.ptitle{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:3px;margin-bottom:14px;text-align:center;}
-.flabel{font-size:11px;color:rgba(201,168,76,.7);letter-spacing:2px;font-family:'Cinzel',serif;margin-bottom:5px;display:block;}
-.inp{width:100%;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Crimson Text',serif;font-size:15px;outline:none;margin-bottom:10px;}
+.ptitle{font-family:Cinzel,serif;font-size:11px;color:var(--gold);letter-spacing:3px;margin-bottom:14px;text-align:center;}
+.flabel{font-size:11px;color:rgba(201,168,76,.7);letter-spacing:2px;font-family:Cinzel,serif;margin-bottom:5px;display:block;}
+.inp{width:100%;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:10px 14px;color:#fff;font-family:serif;font-size:15px;outline:none;margin-bottom:10px;}
 .inp:focus{border-color:var(--gold);}
 .inp::placeholder{color:rgba(255,255,255,.2);}
-.num-inp{width:90px;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:8px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:13px;outline:none;text-align:center;}
+.num-inp{width:90px;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:8px;color:var(--gold-light);font-family:Cinzel,serif;font-size:13px;outline:none;text-align:center;}
 .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .gap{display:flex;gap:8px;align-items:center;}
-.btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold-dark),var(--gold),var(--gold-dark));border:none;border-radius:10px;color:#1a0a00;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:8px;}
+.btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold-dark),var(--gold),var(--gold-dark));border:none;border-radius:10px;color:#1a0a00;font-family:Cinzel,serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:8px;}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
 .btn:active:not(:disabled){transform:scale(.98);}
-.btn-sm{padding:9px 14px;background:rgba(201,168,76,.2);border:1px solid var(--gold);border-radius:8px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:11px;cursor:pointer;white-space:nowrap;}
-.slabel{font-family:'Cinzel',serif;font-size:10px;color:rgba(201,168,76,.6);letter-spacing:2px;margin:10px 0 7px;text-transform:uppercase;}
-.code-big{font-family:'Cinzel',serif;font-size:36px;letter-spacing:10px;color:var(--gold-light);text-align:center;padding:12px 0;background:rgba(0,0,0,.4);border-radius:10px;margin:8px 0;cursor:pointer;}
+.btn-sm{padding:9px 14px;background:rgba(201,168,76,.2);border:1px solid var(--gold);border-radius:8px;color:var(--gold-light);font-family:Cinzel,serif;font-size:11px;cursor:pointer;white-space:nowrap;}
+.slabel{font-family:Cinzel,serif;font-size:10px;color:rgba(201,168,76,.6);letter-spacing:2px;margin:10px 0 7px;text-transform:uppercase;}
+.code-big{font-family:Cinzel,serif;font-size:36px;letter-spacing:10px;color:var(--gold-light);text-align:center;padding:12px 0;background:rgba(0,0,0,.4);border-radius:10px;margin:8px 0;cursor:pointer;}
 .code-hint{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:6px;}
 .plist{display:flex;flex-direction:column;gap:5px;margin:8px 0;}
 .pitem{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,0,0,.3);border-radius:8px;font-size:13px;}
 .dot{width:8px;height:8px;border-radius:50%;background:#0f0;flex-shrink:0;}
-.htag{font-family:'Cinzel',serif;font-size:9px;color:#fd0;background:rgba(255,200,0,.15);border:1px solid rgba(255,200,0,.3);border-radius:4px;padding:1px 6px;margin-left:auto;}
+.htag{font-family:Cinzel,serif;font-size:9px;color:#fd0;background:rgba(255,200,0,.15);border:1px solid rgba(255,200,0,.3);border-radius:4px;padding:1px 6px;margin-left:auto;}
 .smsg{font-size:12px;text-align:center;padding:7px;border-radius:8px;margin-top:6px;}
 .s-ok{color:#0f0;}.s-err{color:#f88;}.s-info{color:#4af;}
 /* game */
 #screen-game{padding:10px;align-items:stretch;}
 .felt{width:100%;max-width:700px;background:radial-gradient(ellipse at center,var(--felt-light),var(--felt) 60%,var(--felt-dark));border-radius:100px;border:5px solid var(--gold-dark);box-shadow:0 0 0 2px var(--gold),0 8px 40px rgba(0,0,0,.7),inset 0 0 40px rgba(0,0,0,.3);padding:20px 24px;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:180px;margin:0 auto 10px;}
 #comm-cards{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
-#pot{font-family:'Cinzel',serif;font-size:12px;color:var(--gold-light);background:rgba(0,0,0,.4);padding:4px 16px;border-radius:20px;border:1px solid rgba(201,168,76,.3);}
-#phase{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.35);}
+#pot{font-family:Cinzel,serif;font-size:12px;color:var(--gold-light);background:rgba(0,0,0,.4);padding:4px 16px;border-radius:20px;border:1px solid rgba(201,168,76,.3);}
+#phase{font-family:Cinzel,serif;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.35);}
 #seats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;width:100%;max-width:700px;margin:0 auto 8px;}
 .seat{background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:8px;text-align:center;position:relative;}
 .seat.myturn{border-color:var(--gold);background:rgba(201,168,76,.12);box-shadow:0 0 18px rgba(201,168,76,.3);}
 .seat.waiting{border-color:#fa0;animation:wp .9s infinite alternate;}
 @keyframes wp{from{box-shadow:0 0 6px rgba(255,165,0,.2);}to{box-shadow:0 0 20px rgba(255,165,0,.5);}}
 .seat.folded{opacity:.4;}
-.seat.dealer::before{content:'D';position:absolute;top:-8px;left:-8px;width:19px;height:19px;background:var(--gold);color:#000;border-radius:50%;font-family:'Cinzel',serif;font-size:9px;font-weight:700;line-height:19px;text-align:center;}
-.sname{font-family:'Cinzel',serif;font-size:10px;color:var(--gold-light);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.seat.dealer::before{content:'D';position:absolute;top:-8px;left:-8px;width:19px;height:19px;background:var(--gold);color:#000;border-radius:50%;font-family:Cinzel,serif;font-size:9px;font-weight:700;line-height:19px;text-align:center;}
+.sname{font-family:Cinzel,serif;font-size:10px;color:var(--gold-light);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .schips{font-size:11px;color:rgba(255,255,255,.65);}
 .sbet{font-size:10px;color:#f0d080;min-height:14px;}
 .scards{display:flex;gap:3px;justify-content:center;margin-top:4px;}
 .sst{font-size:9px;color:rgba(255,255,255,.35);min-height:12px;}
-.card{width:36px;height:52px;background:#faf8f0;border-radius:4px;border:1px solid #ccc;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#1a1a1a;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.4);}
-.card.red{color:var(--red);}.card.back{background:linear-gradient(135deg,#1a3a6a,#0d1f40);border-color:var(--gold-dark);}
-.cr{font-size:12px;font-family:'Cinzel',serif;line-height:1;}.cs{font-size:13px;line-height:1;}
-.card.sm{width:28px;height:40px;}.card.sm .cr{font-size:9px;}.card.sm .cs{font-size:10px;}
+/* カードはすべてSVGで描画 - CSSは最小限 */
+.card-wrap{display:inline-block;flex-shrink:0;line-height:0;}
+.card-wrap.sm svg{width:32px;height:46px;}
+.card-wrap.lg svg{width:68px;height:100px;}
+.card-wrap svg{width:44px;height:64px;border-radius:5px;box-shadow:0 3px 10px rgba(0,0,0,.55);}
 #ap{width:100%;max-width:700px;margin:0 auto;background:rgba(0,0,0,.6);border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:12px;}
 #ap-hd{display:flex;justify-content:space-between;margin-bottom:10px;}
-#ap-who{font-family:'Cinzel',serif;font-size:12px;color:var(--gold-light);}
+#ap-who{font-family:Cinzel,serif;font-size:12px;color:var(--gold-light);}
 #ap-info{font-size:11px;color:rgba(255,255,255,.45);}
 #hdisp{display:flex;gap:8px;justify-content:center;margin-bottom:10px;}
 .prow{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;}
-.pbtn{flex:1;min-width:44px;padding:4px 2px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:5px;color:var(--gold);font-family:'Cinzel',serif;font-size:8px;cursor:pointer;text-align:center;}
+.pbtn{flex:1;min-width:44px;padding:4px 2px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:5px;color:var(--gold);font-family:Cinzel,serif;font-size:8px;cursor:pointer;text-align:center;}
 #rrow{display:none;}
-#rrow label{font-size:10px;color:var(--gold);white-space:nowrap;font-family:'Cinzel',serif;}
-#rinp{flex:1;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.4);border-radius:7px;padding:7px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:14px;outline:none;text-align:center;}
+#rrow label{font-size:10px;color:var(--gold);white-space:nowrap;font-family:Cinzel,serif;}
+#rinp{flex:1;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.4);border-radius:7px;padding:7px;color:var(--gold-light);font-family:Cinzel,serif;font-size:14px;outline:none;text-align:center;}
 #rslider{width:100%;margin-bottom:8px;accent-color:var(--gold);}
 .brow{display:flex;gap:6px;flex-wrap:wrap;}
-.ab{flex:1;min-width:65px;padding:10px 4px;border:none;border-radius:8px;font-family:'Cinzel',serif;font-size:10px;cursor:pointer;font-weight:700;}
+.ab{flex:1;min-width:65px;padding:10px 4px;border:none;border-radius:8px;font-family:Cinzel,serif;font-size:10px;cursor:pointer;font-weight:700;}
 .ab:active{transform:scale(.97);}
 .ab-fold{background:rgba(150,40,40,.8);color:#ffaaaa;border:1px solid rgba(200,60,60,.5);}
 .ab-check{background:rgba(40,100,180,.8);color:#aaddff;border:1px solid rgba(60,130,210,.5);}
@@ -83,19 +84,19 @@ body{background:radial-gradient(ellipse at 50%,#1e5535 0%,#0a2010 100%);min-heig
 .ab-allin{background:linear-gradient(135deg,#7a0000,#c00);color:#fff;border:1px solid #f00;}
 #ibar{width:100%;max-width:700px;margin:0 auto 6px;background:rgba(0,0,0,.5);border:1px solid rgba(255,165,0,.3);border-radius:10px;padding:8px;text-align:center;display:none;}
 #ibar.show{display:block;}
-#ibar-t{font-family:'Cinzel',serif;font-size:11px;color:#fa0;}
-#mover{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center;padding:20px;}
+#ibar-t{font-family:Cinzel,serif;font-size:11px;color:#fa0;}
+#mover{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:16px;}
 #mover.show{display:flex;}
-.mcard{background:linear-gradient(145deg,#1a2a10,#0d1a08);border:2px solid var(--gold);border-radius:20px;padding:24px;text-align:center;max-width:440px;width:100%;}
-.mtitle{font-family:'Cinzel',serif;font-size:18px;color:var(--gold-light);margin-bottom:10px;}
-.mbody{font-size:13px;color:rgba(255,255,255,.8);line-height:1.8;margin-bottom:14px;}
+.mcard{background:linear-gradient(145deg,#1a2a10,#0d1a08);border:2px solid var(--gold);border-radius:20px;padding:16px;text-align:center;max-width:440px;width:100%;max-height:85vh;display:flex;flex-direction:column;}
+.mtitle{font-family:Cinzel,serif;font-size:18px;color:var(--gold-light);margin-bottom:10px;}
+.mbody{font-size:12px;color:rgba(255,255,255,.8);line-height:1.6;margin-bottom:10px;overflow-y:auto;flex:1;}
 .mbody .wn{color:var(--gold-light);font-size:15px;font-weight:600;}.mbody .hn{color:#aaffaa;font-size:11px;}
-.mcards{display:flex;gap:6px;justify-content:center;margin:8px 0;flex-wrap:wrap;width:100%;}
-.mnext{padding:12px 28px;background:linear-gradient(135deg,var(--gold-dark),var(--gold));border:none;border-radius:10px;color:#1a0a00;font-family:'Cinzel',serif;font-size:12px;font-weight:700;cursor:pointer;}
+.mcards{display:flex;gap:4px;justify-content:center;margin:6px 0;flex-wrap:wrap;width:100%;overflow-y:auto;}
+.mnext{padding:12px 28px;background:linear-gradient(135deg,var(--gold-dark),var(--gold));border:none;border-radius:10px;color:#1a0a00;font-family:Cinzel,serif;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;margin-top:8px;}
 
 /* チップ表示 */
 .chips-stack{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;align-items:center;}
-.chip{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:‘Cinzel’,serif;font-size:8px;font-weight:700;border:2px dashed rgba(255,255,255,.5);box-shadow:0 2px 6px rgba(0,0,0,.6),inset 0 1px 3px rgba(255,255,255,.35);position:relative;flex-shrink:0;letter-spacing:-0.5px;}
+.chip{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:8px;font-weight:700;border:2px dashed rgba(255,255,255,.5);box-shadow:0 2px 6px rgba(0,0,0,.6),inset 0 1px 3px rgba(255,255,255,.35);position:relative;flex-shrink:0;letter-spacing:-0.5px;}
 .chip-500{background:radial-gradient(circle at 35% 35%,#b06fe0,#7d3fb5);color:#fff;}
 .chip-100{background:radial-gradient(circle at 35% 35%,#4a6080,#2c3e50);color:#fff;}
 .chip-25{background:radial-gradient(circle at 35% 35%,#27ae60,#1e8449);color:#fff;}
@@ -104,7 +105,7 @@ body{background:radial-gradient(ellipse at 50%,#1e5535 0%,#0a2010 100%);min-heig
 .chip-1{background:radial-gradient(circle at 35% 35%,#ecf0f1,#bdc3c7);color:#333;}
 /* チップ選択UI */
 .chip-selector{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;}
-.chip-sel-btn{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.25);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:‘Cinzel’,serif;font-weight:700;box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 1px 3px rgba(255,255,255,.25);transition:all .15s;position:relative;flex-shrink:0;}
+.chip-sel-btn{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.25);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Cinzel,serif;font-weight:700;box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 1px 3px rgba(255,255,255,.25);transition:all .15s;position:relative;flex-shrink:0;}
 .chip-sel-btn:active{transform:scale(.92);}
 .chip-sel-btn.sel{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.5),0 3px 8px rgba(0,0,0,.5);}
 .chip-sel-btn .cl{font-size:9px;line-height:1;}
@@ -114,16 +115,16 @@ body{background:radial-gradient(ellipse at 50%,#1e5535 0%,#0a2010 100%);min-heig
 .chip-sel-25{background:radial-gradient(circle at 35% 35%,#27ae60,#1e8449);color:#fff;}
 .chip-sel-10{background:radial-gradient(circle at 35% 35%,#2980b9,#1a5276);color:#fff;}
 .chip-sel-5{background:radial-gradient(circle at 35% 35%,#e74c3c,#c0392b);color:#fff;}
-.bet-display{font-family:‘Cinzel’,serif;font-size:22px;color:var(–gold-light);text-align:center;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.4);border-radius:10px;padding:8px 16px;margin-bottom:8px;letter-spacing:2px;}
+.bet-display{font-family:Cinzel,serif;font-size:22px;color:var(–gold-light);text-align:center;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.4);border-radius:10px;padding:8px 16px;margin-bottom:8px;letter-spacing:2px;}
 .bet-sub{font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:8px;}
-.chip-count{position:absolute;top:-4px;right:-4px;background:#000;color:#fd0;border-radius:6px;font-size:6px;padding:0 2px;font-family:‘Cinzel’,serif;font-weight:700;line-height:10px;min-width:10px;text-align:center;}
-.chips-total{font-family:‘Cinzel’,serif;font-size:10px;color:var(–gold-light);margin-top:2px;}
+.chip-count{position:absolute;top:-4px;right:-4px;background:#000;color:#fd0;border-radius:6px;font-size:6px;padding:0 2px;font-family:Cinzel,serif;font-weight:700;line-height:10px;min-width:10px;text-align:center;}
+.chips-total{font-family:Cinzel,serif;font-size:10px;color:var(–gold-light);margin-top:2px;}
 @keyframes cpuprog{from{width:0}to{width:100%}}
 
 /* アクション表示バブル */
 .action-bubble{position:absolute;top:-28px;left:50%;transform:translateX(-50%);
 background:rgba(0,0,0,.85);border:1px solid var(–gold);border-radius:10px;
-padding:3px 10px;font-family:‘Cinzel’,serif;font-size:10px;white-space:nowrap;
+padding:3px 10px;font-family:Cinzel,serif;font-size:10px;white-space:nowrap;
 z-index:10;pointer-events:none;animation:bubblePop .25s ease;}
 .action-bubble.ab-fold{border-color:#e74c3c;color:#f88;}
 .action-bubble.ab-check{border-color:#3498db;color:#adf;}
@@ -138,11 +139,28 @@ z-index:10;pointer-events:none;animation:bubblePop .25s ease;}
 border:2px solid var(–gold);border-radius:18px;padding:20px 36px;text-align:center;
 animation:phaseIn .4s ease forwards;}
 @keyframes phaseIn{from{opacity:0;transform:scale(.6);}to{opacity:1;transform:scale(1);}}
-#phase-name{font-family:‘Cinzel’,serif;font-size:26px;font-weight:900;
+#phase-name{font-family:Cinzel,serif;font-size:26px;font-weight:900;
 background:linear-gradient(135deg,#8a6820,#f0d080,#c9a84c);
 -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 letter-spacing:6px;margin-bottom:6px;}
 #phase-cards-row{display:flex;gap:8px;justify-content:center;margin-top:8px;}
+
+/* ディール演出 */
+#deal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:60;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+#deal-overlay.show{display:flex;}
+#deal-cards-row{display:flex;gap:16px;justify-content:center;}
+#deal-label{font-family:Cinzel,serif;font-size:12px;color:var(–gold);letter-spacing:4px;opacity:.8;}
+@keyframes dealIn{from{opacity:0;transform:translateY(-30px) rotate(-5deg);}to{opacity:1;transform:translateY(0) rotate(0deg);}}
+.deal-card-anim{animation:dealIn .35s ease forwards;}
+.deal-card-anim:nth-child(2){animation-delay:.2s;opacity:0;}
+
+#confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;align-items:center;justify-content:center;padding:20px;}
+#confirm-overlay.show{display:flex;}
+#confirm-box{background:linear-gradient(145deg,#1a2a10,#0d1a08);border:2px solid var(–gold);border-radius:16px;padding:24px;text-align:center;max-width:300px;width:100%;}
+#confirm-msg{font-family:Cinzel,serif;font-size:13px;color:rgba(255,255,255,.9);margin-bottom:20px;line-height:1.6;}
+#confirm-btns{display:flex;gap:10px;justify-content:center;}
+#confirm-yes{padding:10px 28px;background:linear-gradient(135deg,#7a0000,#c00);border:none;border-radius:8px;color:#fff;font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation;}
+#confirm-no{padding:10px 28px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:rgba(255,255,255,.7);font-family:Cinzel,serif;font-size:11px;cursor:pointer;touch-action:manipulation;}
 </style>
 
 </head>
@@ -153,37 +171,37 @@ letter-spacing:6px;margin-bottom:6px;}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div id="conn-badge" class="badge b-info">接続確認中...</div>
+  <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
 
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
     <div style="display:flex;gap:8px;">
-      <button id="btn-mode-online" style="flex:1;padding:12px 4px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:rgba(255,255,255,.6);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;cursor:pointer;opacity:0.4;">🌐 オンライン<br><span style="font-size:9px;opacity:.7;">ルームコード対戦</span></button>
-      <button id="btn-mode-offline" style="flex:1;padding:12px 4px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:10px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;cursor:pointer;">🤖 オフライン<br><span style="font-size:9px;opacity:.7;">CPU対戦</span></button>
+      <button id="btn-mode-online" style="flex:1;padding:12px 4px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;letter-spacing:1px;cursor:pointer;">🌐 オンライン<br><span style="font-size:9px;opacity:.7;">ルームコード対戦</span></button>
+      <button id="btn-mode-offline" style="flex:1;padding:12px 4px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:10px;color:var(--gold-light);font-family:Cinzel,serif;font-size:11px;letter-spacing:1px;cursor:pointer;">🤖 オフライン<br><span style="font-size:9px;opacity:.7;">CPU対戦</span></button>
     </div>
   </div>
 
   <!-- オフライン設定パネル -->
 
-  <div id="panel-offline" class="panel" style="display:none;">
+  <div id="panel-offline" class="panel">
     <div class="ptitle">🤖 CPU対戦設定</div>
     <label class="flabel">プレイヤー名</label>
     <input class="inp" id="off-name" value="プレイヤー1">
     <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">開始チップ</span><input class="num-inp" id="off-chips" value="500"></div>
     <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">CPU人数</span>
       <div style="display:flex;gap:6px;">
-        <button class="cpu-cnt-btn" data-n="1" style="padding:6px 12px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:12px;cursor:pointer;">1</button>
-        <button class="cpu-cnt-btn" data-n="2" style="padding:6px 12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:'Cinzel',serif;font-size:12px;cursor:pointer;">2</button>
-        <button class="cpu-cnt-btn" data-n="3" style="padding:6px 12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:'Cinzel',serif;font-size:12px;cursor:pointer;">3</button>
-        <button class="cpu-cnt-btn" data-n="4" style="padding:6px 12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:'Cinzel',serif;font-size:12px;cursor:pointer;">4</button>
-        <button class="cpu-cnt-btn" data-n="5" style="padding:6px 12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:'Cinzel',serif;font-size:12px;cursor:pointer;">5</button>
+        <button class="cpu-cnt-btn" data-n="1" style="padding:6px 12px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:12px;cursor:pointer;">1</button>
+        <button class="cpu-cnt-btn" data-n="2" style="padding:6px 12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:12px;cursor:pointer;">2</button>
+        <button class="cpu-cnt-btn" data-n="3" style="padding:6px 12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:12px;cursor:pointer;">3</button>
+        <button class="cpu-cnt-btn" data-n="4" style="padding:6px 12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:12px;cursor:pointer;">4</button>
+        <button class="cpu-cnt-btn" data-n="5" style="padding:6px 12px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:12px;cursor:pointer;">5</button>
       </div>
     </div>
     <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">難易度</span>
       <div style="display:flex;gap:6px;">
-        <button class="diff-btn" data-d="easy" style="padding:6px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:'Cinzel',serif;font-size:10px;cursor:pointer;">EASY</button>
-        <button class="diff-btn" data-d="normal" style="padding:6px 10px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:'Cinzel',serif;font-size:10px;cursor:pointer;">NORMAL</button>
-        <button class="diff-btn" data-d="hard" style="padding:6px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:'Cinzel',serif;font-size:10px;cursor:pointer;">HARD</button>
+        <button class="diff-btn" data-d="easy" style="padding:6px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">EASY</button>
+        <button class="diff-btn" data-d="normal" style="padding:6px 10px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">NORMAL</button>
+        <button class="diff-btn" data-d="hard" style="padding:6px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">HARD</button>
       </div>
     </div>
     <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">SB</span><input class="num-inp" id="off-sb" value="5"></div>
@@ -191,7 +209,7 @@ letter-spacing:6px;margin-bottom:6px;}
     <button class="btn" id="btn-start-offline">ゲーム開始</button>
   </div>
 
-  <div id="panel-online">
+  <div id="panel-online" style="display:none;">
   <div class="panel">
     <div class="ptitle">あなたの情報</div>
     <label class="flabel">プレイヤー名</label>
@@ -221,7 +239,7 @@ letter-spacing:6px;margin-bottom:6px;}
   <div class="panel">
     <div class="ptitle">🚪 ルームに参加</div>
     <div class="gap">
-      <input class="inp" id="join-code" placeholder="XXXXXX" maxlength="6" style="margin-bottom:0;font-family:'Cinzel',serif;font-size:20px;letter-spacing:6px;text-align:center;text-transform:uppercase;color:var(--gold-light);">
+      <input class="inp" id="join-code" placeholder="XXXXXX" maxlength="6" style="margin-bottom:0;font-family:Cinzel,serif;font-size:20px;letter-spacing:6px;text-align:center;text-transform:uppercase;color:var(--gold-light);">
       <button class="btn-sm" id="btn-join">参加</button>
     </div>
     <div id="join-msg" class="smsg"></div>
@@ -232,6 +250,9 @@ letter-spacing:6px;margin-bottom:6px;}
 <!-- ゲーム -->
 
 <div id="screen-game" class="screen">
+  <div id="back-btn-wrap" style="display:none;width:100%;max-width:700px;margin:0 auto 6px;text-align:right;">
+    <button id="btn-back-lobby" style="background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:6px 14px;color:rgba(255,255,255,.6);font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;cursor:pointer;touch-action:manipulation;" onclick="document.getElementById('confirm-overlay').classList.add('show');">✕ ロビーへ</button>
+  </div>
   <div id="seats"></div>
   <div class="felt">
     <div id="phase">WAITING</div>
@@ -239,7 +260,7 @@ letter-spacing:6px;margin-bottom:6px;}
     <div id="pot">POT: 0</div>
   </div>
   <div id="cpu-bar" style="display:none;width:100%;max-width:700px;margin:0 auto 6px;background:rgba(0,0,0,.5);border:1px solid rgba(0,150,255,.3);border-radius:10px;padding:8px 16px;text-align:center;">
-    <div id="cpu-bar-text" style="font-family:'Cinzel',serif;font-size:11px;color:#4af;letter-spacing:2px;">CPU思考中...</div>
+    <div id="cpu-bar-text" style="font-family:Cinzel,serif;font-size:11px;color:#4af;letter-spacing:2px;">CPU思考中...</div>
     <div style="height:3px;background:rgba(0,150,255,.2);border-radius:2px;margin-top:5px;overflow:hidden;"><div id="cpu-prog" style="height:100%;background:#4af;border-radius:2px;animation:cpuprog 1s linear forwards;"></div></div>
   </div>
   <div id="ibar"><div id="ibar-t"></div></div>
@@ -263,6 +284,10 @@ letter-spacing:6px;margin-bottom:6px;}
   </div>
 </div>
 
+<div id="deal-overlay">
+  <div id="deal-label">YOUR HAND</div>
+  <div id="deal-cards-row"></div>
+</div>
 <div id="phase-overlay">
   <div id="phase-card">
     <div id="phase-name">FLOP</div>
@@ -280,33 +305,58 @@ letter-spacing:6px;margin-bottom:6px;}
 
 <script>
 (function(){
-'use strict';
 
 // ════════════════════════════════════════
 // Firebase REST API
 // ════════════════════════════════════════
 var DB = 'https://poker-cc448-default-rtdb.asia-southeast1.firebasedatabase.app';
 var _polls = {};
+var offlineMode = false; // 早期宣言：fbGet等のガード用
 
 function fbUrl(path){ return DB + '/' + path + '.json'; }
 
 function fbGet(path, cb){
-  fetch(fbUrl(path))
-    .then(function(r){ return r.json(); })
-    .then(function(d){ cb(d); })
-    .catch(function(){ cb(null); });
+  if(offlineMode){ setTimeout(function(){cb(null);},0); return; }
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', fbUrl(path), true);
+    xhr.timeout = 5000;
+    xhr.onload = function(){
+      try { cb(JSON.parse(xhr.responseText)); } catch(e){ cb(null); }
+    };
+    xhr.onerror = function(){ cb(null); };
+    xhr.ontimeout = function(){ cb(null); };
+    xhr.send();
+  } catch(e){ setTimeout(function(){cb(null);},0); }
 }
 function fbSet(path, val, cb){
-  fetch(fbUrl(path), {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(val)})
-    .then(function(){ if(cb) cb(); })
-    .catch(function(e){ console.error('fbSet', e); if(cb) cb(); });
+  if(offlineMode){ if(cb) setTimeout(cb,0); return; }
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('PUT', fbUrl(path), true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.timeout = 5000;
+    xhr.onload = function(){ if(cb) cb(); };
+    xhr.onerror = function(){ if(cb) cb(); };
+    xhr.ontimeout = function(){ if(cb) cb(); };
+    xhr.send(JSON.stringify(val));
+  } catch(e){ if(cb) setTimeout(cb,0); }
 }
 function fbPatch(path, val, cb){
-  fetch(fbUrl(path), {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(val)})
-    .then(function(){ if(cb) cb(); })
-    .catch(function(e){ console.error('fbPatch', e); if(cb) cb(); });
+  if(offlineMode){ if(cb) setTimeout(cb,0); return; }
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('PATCH', fbUrl(path), true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.timeout = 5000;
+    xhr.onload = function(){ if(cb) cb(); };
+    xhr.onerror = function(){ if(cb) cb(); };
+    xhr.ontimeout = function(){ if(cb) cb(); };
+    xhr.send(JSON.stringify(val));
+  } catch(e){ if(cb) setTimeout(cb,0); }
 }
 function fbListen(path, cb){
+  if(offlineMode){ return; }
   if(!_polls[path]) _polls[path] = {last:null, cbs:[], timer:null};
   _polls[path].cbs.push(cb);
   fbGet(path, function(d){
@@ -415,9 +465,133 @@ var HN=['ハイカード','ワンペア','ツーペア','スリーカード','�
 function makeDeck(){var d=[];SUITS.forEach(function(s){RANKS.forEach(function(r){d.push({r:r,s:s});});});return d;}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function isRed(s){return s==='♥'||s==='♦';}
-function cH(c,sm){
-  if(!c) return '<div class="card'+(sm?' sm':'')+' back"></div>';
-  return '<div class="card'+(sm?' sm':'')+(isRed(c.s)?' red':'')+'"><div class="cr">'+c.r+'</div><div class="cs">'+c.s+'</div></div>';
+function cH(c,sm,lg){
+  var sz=lg?'lg':sm?'sm':'';
+  var wrap='<span class="card-wrap'+(sz?' '+sz:'')+'">',wend='</span>';
+
+  // 裏面
+  if(!c){
+    var bid="bp"+(Math.random().toString(36).substr(2,6));return wrap+'<svg viewBox="0 0 44 64" xmlns="http://www.w3.org/2000/svg"><rect width="44" height="64" rx="4" fill="#1a3a8a"/><rect x="3" y="3" width="38" height="58" rx="3" fill="none" stroke="#c9a84c" stroke-width="1.2"/><pattern id="'+bid+'" patternUnits="userSpaceOnUse" width="8" height="8"><rect width="8" height="8" fill="#1a3a8a"/><rect x="0" y="0" width="4" height="4" fill="#1e42a0" opacity="0.5"/><rect x="4" y="4" width="4" height="4" fill="#1e42a0" opacity="0.5"/></pattern><rect x="4" y="4" width="36" height="56" rx="2" fill="url(#'+bid+')"/></svg>'+wend;
+  }
+
+  var red=isRed(c.s);
+  var col=red?'#d0021b':'#1a1a1a';
+  var S=c.s, R=c.r;
+
+  // スートのSVGパス（小・中・大）
+  function suitPath(x,y,size,col){
+    var h=size/2;
+    if(S==='♠'){
+      return '<g transform="translate('+x+','+y+')">'
+        +'<path d="M0,-'+h+' C0,-'+h+' -'+(h*.9)+',0 -'+(h*.9)+','+(h*.4)+' C-'+(h*.9)+','+(h*.9)+' -'+(h*.3)+','+(h*.8)+' 0,'+(h*.5)+' C'+(h*.3)+','+(h*.8)+' '+(h*.9)+','+(h*.9)+' '+(h*.9)+','+(h*.4)+' C'+(h*.9)+',0 0,-'+h+' 0,-'+h+'" fill="'+col+'"/>'
+        +'<rect x="-'+(h*.15)+'" y="'+(h*.5)+'" width="'+(h*.3)+'" height="'+(h*.5)+'" fill="'+col+'"/>'
+        +'<ellipse cx="0" cy="'+(h*1.1)+'" rx="'+(h*.45)+'" ry="'+(h*.15)+'" fill="'+col+'"/>'
+        +'</g>';
+    } else if(S==='♥'){
+      // 正確なハート形：2つの円弧＋下向き三角
+      return '<g transform="translate('+x+','+y+')">'
+        +'<path d="M0,'+(h*.9)+' '
+          +'L-'+(h*.95)+','+(h*0.1)+' '
+          +'A'+(h*.5)+','+(h*.5)+' 0 0,1 0,-'+(h*.4)+' '
+          +'A'+(h*.5)+','+(h*.5)+' 0 0,1 '+(h*.95)+','+(h*0.1)+' '
+          +'Z" fill="'+col+'"/>'
+        +'</g>';
+    } else if(S==='♦'){
+      return '<g transform="translate('+x+','+y+')">'
+        +'<path d="M0,-'+h+' L'+h+',0 L0,'+h+' L-'+h+',0 Z" fill="'+col+'"/>'
+        +'</g>';
+    } else { // ♣
+      return '<g transform="translate('+x+','+y+')">'
+        +'<circle cx="0" cy="-'+(h*.2)+'" r="'+(h*.45)+'" fill="'+col+'"/>'
+        +'<circle cx="-'+(h*.4)+'" cy="'+(h*.25)+'" r="'+(h*.4)+'" fill="'+col+'"/>'
+        +'<circle cx="'+(h*.4)+'" cy="'+(h*.25)+'" r="'+(h*.4)+'" fill="'+col+'"/>'
+        +'<rect x="-'+(h*.13)+'" y="'+(h*.4)+'" width="'+(h*.26)+'" height="'+(h*.55)+'" fill="'+col+'"/>'
+        +'<ellipse cx="0" cy="'+(h*1.0)+'" rx="'+(h*.38)+'" ry="'+(h*.15)+'" fill="'+col+'"/>'
+        +'</g>';
+    }
+  }
+
+  // ランク文字
+  function rankText(x,y,fs,col,rot){
+    var t='<text x="'+x+'" y="'+y+'" font-size="'+fs+'" font-weight="bold" font-family="Georgia,serif" fill="'+col+'" text-anchor="middle" dominant-baseline="middle"';
+    if(rot) t+=' transform="rotate(180 '+x+' '+y+')"';
+    t+='>'+R+'</text>';
+    return t;
+  }
+
+  // マーク配置テーブル（標準トランプ準拠）
+  // [x, y, rotate180] rotate=trueで下向き
+  var pips={
+    'A': [[22,32,false]],
+    '2': [[22,15,false],[22,49,true]],
+    '3': [[22,14,false],[22,32,false],[22,50,true]],
+    '4': [[12,16,false],[32,16,false],[12,48,true],[32,48,true]],
+    '5': [[12,16,false],[32,16,false],[22,32,false],[12,48,true],[32,48,true]],
+    '6': [[12,15,false],[32,15,false],[12,32,false],[32,32,false],[12,49,true],[32,49,true]],
+    '7': [[12,15,false],[32,15,false],[22,24,false],[12,32,true],[32,32,true],[12,49,true],[32,49,true]],
+    '8': [[12,14,false],[32,14,false],[22,23,false],[12,32,true],[32,32,true],[22,41,true],[12,50,true],[32,50,true]],
+    '9': [[12,13,false],[32,13,false],[12,24,false],[32,24,false],[22,32,false],[12,40,true],[32,40,true],[12,51,true],[32,51,true]],
+    '10':[[12,13,false],[32,13,false],[12,23,false],[32,23,false],[22,30,false],[22,34,true],[12,41,true],[32,41,true],[12,51,true],[32,51,true]]
+  };
+
+  var svgParts='<svg viewBox="0 0 44 64" xmlns="http://www.w3.org/2000/svg">';
+  // カード背景
+  svgParts+='<rect width="44" height="64" rx="4" fill="#fff"/>';
+  svgParts+='<rect x="0.5" y="0.5" width="43" height="63" rx="3.5" fill="none" stroke="#ddd" stroke-width="0.8"/>';
+
+  var faceCards=['J','Q','K'];
+  if(faceCards.indexOf(R)>=0){
+    // 絵札
+    svgParts+=rankText(6,10,8,col,false);
+    svgParts+=suitPath(6,18,7,col);
+    svgParts+=rankText(38,54,8,col,true);
+    svgParts+=suitPath(38,46,7,col);
+
+    // 絵柄エリア（枠）
+    svgParts+='<rect x="7" y="24" width="30" height="20" rx="2" fill="'+(red?'#fff0f0':'#f0f4ff')+'" stroke="'+col+'" stroke-width="0.8"/>';
+
+    if(R==='J'){
+      // ジャック：若い騎士
+      svgParts+='<text x="22" y="36" font-size="14" text-anchor="middle" dominant-baseline="middle">'+
+        (red?'🥷':'⚔️')+'</text>';
+    } else if(R==='Q'){
+      // クイーン：女王
+      svgParts+='<text x="22" y="36" font-size="14" text-anchor="middle" dominant-baseline="middle">'+
+        (red?'👸':'🫅')+'</text>';
+    } else {
+      // キング：王様
+      svgParts+='<text x="22" y="36" font-size="14" text-anchor="middle" dominant-baseline="middle">'+
+        (red?'🤴':'👑')+'</text>';
+    }
+
+  } else if(R==='A'){
+    // エース：大きなスート
+    svgParts+=rankText(6,10,9,col,false);
+    svgParts+=suitPath(6,19,7,col);
+    svgParts+=rankText(38,54,9,col,true);
+    svgParts+=suitPath(38,45,7,col);
+    svgParts+=suitPath(22,32,16,col); // 大きい中央マーク
+
+  } else {
+    // 数字カード：コーナーにランクのみ（スートマークなし）
+    var fs=R==='10'?7.5:8;
+    svgParts+=rankText(5.5,9,fs,col,false);
+    svgParts+=rankText(38.5,55,fs,col,true);
+
+    // ピップ配置
+    var pts=pips[R]||[];
+    var pip_size = pts.length<=4?9:pts.length<=6?8:7;
+
+    pts.forEach(function(p){
+      var rot = p[2];
+      svgParts+='<g transform="translate('+p[0]+','+p[1]+')'+(rot?' rotate(180)':'')+'">'
+        + suitPath(0,0,pip_size,col)
+        +'</g>';
+    });
+  }
+
+  svgParts+='</svg>';
+  return wrap+svgParts+wend;
 }
 function combs(a,k){if(!k)return[[]];if(!a.length)return[];return combs(a.slice(1),k-1).map(function(c){return[a[0]].concat(c);}).concat(combs(a.slice(1),k));}
 function sc5(cards){
@@ -447,7 +621,7 @@ function evalHand(cards){var best=null;combs(cards,5).forEach(function(c){var sc
 // モード・CPU設定
 // ════════════════════════════════════════
 var CPU_NAMES=['アレックス','ソフィア','リオン','エマ','ルーカス','ミア'];
-var cpuDifficulty='normal', cpuCount=1, offlineMode=false;
+var cpuDifficulty='normal', cpuCount=1;
 
 function setMode(mode){
   var onBtn=document.getElementById('btn-mode-online');
@@ -465,47 +639,40 @@ function setMode(mode){
   }
 }
 
-// 起動時接続確認 → デフォルトはオフライン、接続できればオンラインに切替
-(function(){
-  // 即座にオフラインで起動（fetchが失敗してもゲームが遊べる）
-  setMode('offline');
-  var el = document.getElementById('conn-badge');
-  el.textContent='接続確認中...'; el.className='badge b-info';
-
-  function goOffline(){
-    el.textContent='⚠ オフライン（CPU対戦のみ利用可）';
-    el.className='badge b-err';
-    document.getElementById('btn-mode-online').style.opacity='0.4';
-    document.getElementById('btn-mode-online').onclick=function(){
-      alert('オンライン接続できません。WiFiまたはモバイル通信を確認してください。');
-    };
-  }
-
-  var timer = setTimeout(goOffline, 5000);
-
-  try {
-    fetch(fbUrl('ping'), {method:'PUT', headers:{'Content-Type':'application/json'}, body:'"ok"'})
-      .then(function(r){
-        clearTimeout(timer);
-        if(r.ok){
-          el.textContent='✓ オンライン接続中'; el.className='badge b-ok';
-          document.getElementById('btn-mode-online').style.opacity='1';
-          document.getElementById('btn-mode-online').onclick=function(){ setMode('online'); };
-          setMode('online');
-        } else {
-          goOffline();
-        }
-      })
-      .catch(function(){ clearTimeout(timer); goOffline(); });
-  } catch(e) {
-    clearTimeout(timer);
-    goOffline();
-  }
-})();
-
-// モードボタンのonclick（JS定義後に設定）
+// モードボタン設定
 document.getElementById('btn-mode-offline').onclick = function(){ setMode('offline'); };
-// オンラインボタンはgoOffline/goOnlineで設定済み
+// ロビーボタンのonclickはHTML側で定義済み
+document.getElementById('btn-mode-online').onclick = function(){
+  var el = document.getElementById('conn-badge');
+  // すでにオンライン確認済みならそのまま切替
+  if(el.className.indexOf('b-ok') >= 0){ setMode('online'); return; }
+  // 接続テスト開始
+  el.textContent = '接続確認中...'; el.className = 'badge b-info';
+  var done = false;
+  function fail(){
+    if(done) return; done = true;
+    el.textContent = '⚠ オフラインモード'; el.className = 'badge b-err';
+    alert('オンライン接続できません。\nGitHub Pages (https://abouter11.github.io/poker/) でアクセスしてください。');
+  }
+  function ok(){
+    if(done) return; done = true;
+    el.textContent = '✓ オンライン接続中'; el.className = 'badge b-ok';
+    setMode('online');
+  }
+  var t = setTimeout(fail, 5000);
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('PUT', fbUrl('ping'), true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.timeout = 5000;
+    xhr.onload = function(){ clearTimeout(t); if(xhr.status>=200&&xhr.status<300) ok(); else fail(); };
+    xhr.onerror = function(){ clearTimeout(t); fail(); };
+    xhr.ontimeout = function(){ clearTimeout(t); fail(); };
+    xhr.send('"ok"');
+  } catch(e){ clearTimeout(t); fail(); }
+};
+
+// 接続確認はオンラインボタン押下時のみ実行
 
 // CPU人数ボタン
 document.querySelectorAll('.cpu-cnt-btn').forEach(function(b){
@@ -549,6 +716,7 @@ function launchOffline(ps){
   players=ps;
   ps.forEach(function(p,i){if(p.isMe)myIdx=i;});
   gamePath=''; holePfx='';
+  document.getElementById('back-btn-wrap').style.display='block';
   showScreen('screen-game');
   startRoundOffline();
 }
@@ -600,21 +768,27 @@ function hideCpuBar(){document.getElementById('cpu-bar').style.display='none';}
 // ── オフライン ゲームループ ──
 function startRoundOffline(){
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
-  players.forEach(function(p){if(p.chips<=0)p.active=false;p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;});
+  players.forEach(function(p){if(p.chips<5)p.active=false;p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;});
   var active=players.filter(function(p){return p.active;});
   if(active.length<2){
     var w=active[0]||players[0];
-    showMsg('ゲーム終了','<span class="wn">'+w.name+'</span>の優勝！','もう一度',function(){showScreen('screen-lobby');offlineMode=false;});
+    showMsg('ゲーム終了','<span class="wn">'+w.name+'</span>の優勝！','もう一度',function(){document.getElementById('back-btn-wrap').style.display='none';showScreen('screen-lobby');offlineMode=false;});
     return;
   }
   dealerIdx=(dealerIdx+1)%players.length;
   while(!players[dealerIdx].active)dealerIdx=(dealerIdx+1)%players.length;
-  active.forEach(function(p){p.hole=[deck.pop(),deck.pop()];if(p.isMe)myHole=p.hole;});
+  var myPlayer=null;
+  active.forEach(function(p){p.hole=[deck.pop(),deck.pop()];if(p.isMe){myHole=p.hole;myPlayer=p;}});
   var sb=nxt(dealerIdx),bb=nxt(sb);
   blind(players[sb],SB);blind(players[bb],BB);
   curBet=BB;lastRaise=BB;curIdx=nxt(bb);acts=[players[sb].idx];
   renderAll();
-  scheduleOfflineAction();
+  // 自分の手札をディール演出で表示してからゲーム開始
+  if(myPlayer && myHole.length===2){
+    showDealOverlay(myHole, function(){ scheduleOfflineAction(); });
+  } else {
+    scheduleOfflineAction();
+  }
 }
 
 function scheduleOfflineAction(){
@@ -640,14 +814,22 @@ function scheduleOfflineAction(){
 function applyCpuAction(p,dec){
   if(dec.action==='fold'){p.folded=true;}
   else if(dec.action==='check'){}
-  else if(dec.action==='call'){var tc=Math.min(curBet-p.bet,p.chips);p.chips-=tc;p.bet+=tc;p.totalBet+=tc;pot+=tc;if(!p.chips)p.allIn=true;}
-  else if(dec.action==='raise'){var nb=Math.min(Math.max(dec.amount,curBet+1),p.chips+p.bet);lastRaise=Math.max(nb-curBet,lastRaise);curBet=nb;var cost=nb-p.bet;p.chips-=cost;p.bet=nb;p.totalBet+=cost;pot+=cost;if(!p.chips)p.allIn=true;acts=[curIdx];}
+  else if(dec.action==='call'){
+    var tc=snap5(Math.min(curBet-p.bet,p.chips));
+    if(tc<5){p.folded=true;} // 5未満コール不可→フォールド
+    else{p.chips-=tc;p.bet+=tc;p.totalBet+=tc;pot+=tc;if(p.chips<5)p.allIn=true;}
+  }
+  else if(dec.action==='raise'){
+    var nb=snap5(Math.min(Math.max(dec.amount,curBet+5),p.chips+p.bet));
+    if(nb-p.bet<5){p.folded=true;}
+    else{lastRaise=Math.max(nb-curBet,lastRaise);curBet=nb;var cost=nb-p.bet;p.chips-=cost;p.bet=nb;p.totalBet+=cost;pot+=cost;if(p.chips<5)p.allIn=true;acts=[curIdx];}
+  }
   if(acts.indexOf(curIdx)<0)acts.push(curIdx);
 }
 
 function advanceOffline(){
   var nf=players.filter(function(p){return p.active&&!p.folded;});
-  if(nf.length===1){nf[0].chips+=pot;renderAll();showMsg('ラウンド終了','<span class="wn">'+nf[0].name+'</span>の勝利！（全員フォールド）','次のラウンド',function(){startRoundOffline();});return;}
+  if(nf.length===1){nf[0].chips+=pot;renderAll();showMsg('ラウンド終了','<span class="wn">'+nf[0].name+'</span>の勝利！（全員フォールド）','次のラウンド',function(){checkEliminated(function(){startRoundOffline();});});return;}
   var ca=players.filter(function(p){return p.active&&!p.folded&&!p.allIn;});
   if(ca.length<=1||(ca.every(function(p){return acts.indexOf(p.idx)>=0;})&&ca.every(function(p){return p.bet===curBet;}))){nextPhaseOffline();return;}
   curIdx=nxt(curIdx);renderAll();scheduleOfflineAction();
@@ -675,17 +857,28 @@ function doShowdownOffline(){
   var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+'</span><br>ポット: '+pot;
   if(wins.length>1)body+='<br>（'+share+'ずつ山分け）';
   body+='<br><br>';cont.forEach(function(p){body+='<b style="color:#aaa">'+p.name+'</b>: '+HN[p.best.score.rank]+'<br>';});
-  var ch='<div style="width:100%;text-align:left;">';
-  cont.forEach(function(p){
+  // 全プレイヤー表示（フォールドはFOLD表示、手札なし）
+  var allActive=players.filter(function(p){return p.active;});
+  var ch='<div style="width:100%;">';
+  allActive.forEach(function(p){
+    var inCont=cont.indexOf(p)>=0;
     var isW=wins.indexOf(p)>=0;
-    ch+='<div style="margin-bottom:8px;padding:6px 8px;border-radius:8px;background:'+(isW?'rgba(201,168,76,.15)':'rgba(0,0,0,.3)')+';border:1px solid '+(isW?'rgba(201,168,76,.5)':'rgba(255,255,255,.1)')+';">';
-    ch+='<div style="font-family:\'Cinzel\',serif;font-size:10px;color:'+(isW?'var(--gold-light)':'rgba(255,255,255,.6)')+';margin-bottom:4px;">'+(isW?'🏆 ':'')+p.name+' — '+HN[p.best.score.rank]+'</div>';
-    ch+='<div style="display:flex;gap:4px;">';
-    p.hole.forEach(function(c){ch+=cH(c);});
-    ch+='</div></div>';
+    var bg=isW?'rgba(201,168,76,.18)':inCont?'rgba(0,0,0,.35)':'rgba(80,0,0,.25)';
+    var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
+    ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:8px;">';
+    ch+='<div style="flex:1;min-width:0;">';
+    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(isW?'🏆 ':inCont?'':'❌ ')+p.name+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+(inCont?HN[p.best.score.rank]:'FOLD')+'</div>';
+    ch+='</div>';
+    if(inCont){
+      ch+='<div style="display:flex;gap:2px;flex-shrink:0;">';
+      p.hole.forEach(function(c){ch+=cH(c,true);});
+      ch+='</div>';
+    }
+    ch+='</div>';
   });
   ch+='</div>';
-  renderAll();showMsg('ショーダウン',body,'次のラウンド',function(){startRoundOffline();},ch);
+  renderAll();showMsg('ショーダウン',body,'次のラウンド',function(){checkEliminated(function(){startRoundOffline();});},ch);
 }
 
 function renderActionOffline(){
@@ -898,7 +1091,7 @@ function pushState(extra){
 
 function startRound(){
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
-  players.forEach(function(p){if(p.chips<=0)p.active=false;p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;});
+  players.forEach(function(p){if(p.chips<5)p.active=false;p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;});
   var active=players.filter(function(p){return p.active;});
   if(active.length<2){var w=active[0];pushState({result:{title:'ゲーム終了',body:'<span class="wn">'+(w?w.name:'?')+'</span>の優勝！',ch:''}});return;}
   dealerIdx=(dealerIdx+1)%players.length;
@@ -969,15 +1162,25 @@ function finishSD(cont,holes){
   var share=snap5(Math.floor(pot/wins.length)); wins.forEach(function(w){w.chips+=share;});
   var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+'</span><br>ポット: '+pot;
   if(wins.length>1) body+='<br>（'+share+'ずつ山分け）';
-  // 全プレイヤーのカード＋ハンド名をchに含める
-  var ch='<div style="width:100%;text-align:left;">';
-  cont.forEach(function(p){
+  // 全プレイヤー（フォールド含む）表示
+  var allActiveOnline=players.filter(function(p){return p.active;});
+  var ch='<div style="width:100%;">';
+  allActiveOnline.forEach(function(p){
+    var inCont=cont.indexOf(p)>=0;
     var isW=wins.indexOf(p)>=0;
-    ch+='<div style="margin-bottom:8px;padding:6px 8px;border-radius:8px;background:'+(isW?'rgba(201,168,76,.15)':'rgba(0,0,0,.3)')+';border:1px solid '+(isW?'rgba(201,168,76,.5)':'rgba(255,255,255,.1)')+';">';
-    ch+='<div style="font-family:'Cinzel',serif;font-size:10px;color:'+(isW?'var(--gold-light)':'rgba(255,255,255,.6)')+';margin-bottom:4px;">'+(isW?'🏆 ':'')+p.name+' — '+HN[p.best.score.rank]+'</div>';
-    ch+='<div style="display:flex;gap:4px;">';
-    p.hole.forEach(function(c){ch+=cH(c);});
-    ch+='</div></div>';
+    var bg=isW?'rgba(201,168,76,.18)':inCont?'rgba(0,0,0,.35)':'rgba(80,0,0,.25)';
+    var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
+    ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:8px;">';
+    ch+='<div style="flex:1;min-width:0;">';
+    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(isW?'🏆 ':inCont?'':'❌ ')+p.name+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+(inCont?HN[p.best.score.rank]:'FOLD')+'</div>';
+    ch+='</div>';
+    if(inCont&&p.hole&&p.hole.length){
+      ch+='<div style="display:flex;gap:2px;flex-shrink:0;">';
+      p.hole.forEach(function(c){ch+=cH(c,true);});
+      ch+='</div>';
+    }
+    ch+='</div>';
   });
   ch+='</div>';
   pushState({showdown:{body:body,ch:ch},reveal:holes,waitFor:null});
@@ -1029,6 +1232,12 @@ function send(action,amount){
 function renderAll(){
   var area=document.getElementById('seats');area.innerHTML='';
   players.forEach(function(p,i){
+    if(p.eliminated){
+      // 脱落プレイヤーを薄く表示
+      var s=document.createElement('div');s.className='seat';s.style.opacity='0.3';s.style.filter='grayscale(1)';
+      s.innerHTML='<div class="sname">'+p.name+'</div><div style="font-family:Cinzel,serif;font-size:9px;color:#f88;letter-spacing:2px;margin-top:8px;">ELIMINATED</div>';
+      area.appendChild(s); return;
+    }
     if(!p.active)return;
     var s=document.createElement('div');s.className='seat';
     if(i===curIdx) s.classList.add(p.isMe?'myturn':'waiting');
@@ -1036,7 +1245,7 @@ function renderAll(){
     if(i===dealerIdx) s.classList.add('dealer');
     var h=p.isMe?(myHole.length?myHole:p.hole):((phase>=4&&!p.folded)?p.hole:[]);
     var show=(phase>=4&&!p.folded&&h&&h.length===2)||p.isMe;
-    var ch=show&&h&&h.length===2?(cH(h[0],true)+cH(h[1],true)):'<div class="card sm back"></div><div class="card sm back"></div>';
+    var ch=show&&h&&h.length===2?(cH(h[0],true)+cH(h[1],true)):cH(null,true)+cH(null,true);
     var st=p.folded?'FOLD':p.allIn?'ALL IN':i===curIdx?(p.isMe?'▶ あなたのターン':'アクション中...'):'';
     s.innerHTML='<div class="sname">'+p.name+(p.isMe?' ⭐':'')+'</div>'+
       '<div class="schips">'+chipsHTML(p.chips)+'</div>'+
@@ -1046,7 +1255,7 @@ function renderAll(){
     area.appendChild(s);
   });
   var cc=document.getElementById('comm-cards');cc.innerHTML='';
-  for(var i=0;i<5;i++) cc.innerHTML+=i<comm.length?cH(comm[i]):'<div class="card back"></div>';
+  for(var i=0;i<5;i++) cc.innerHTML+=i<comm.length?cH(comm[i]):cH(null);
   document.getElementById('pot').innerHTML='<span style="opacity:.6;font-size:10px">POT </span>'+chipsHTML(pot);
   document.getElementById('phase').textContent=PNAMES[Math.min(phase,4)]||'SHOWDOWN';
 }
@@ -1059,6 +1268,47 @@ function showMsg(title,body,lbl,fn,ch){
   document.getElementById('mcards').innerHTML=ch||'';
   var btn=document.getElementById('mnext');btn.textContent=lbl;
   btn.onclick=function(){document.getElementById('mover').classList.remove('show');fn();};
+}
+
+
+// ── ディール演出 ──
+function showDealOverlay(hole, cb){
+  var ov = document.getElementById('deal-overlay');
+  var row = document.getElementById('deal-cards-row');
+  row.innerHTML = '';
+  hole.forEach(function(c){
+    var d = document.createElement('div');
+    d.className = 'deal-card-anim';
+    d.innerHTML = cH(c, false, true); // lg size
+    row.appendChild(d);
+  });
+  ov.classList.add('show');
+  setTimeout(function(){
+    ov.classList.remove('show');
+    if(cb) cb();
+  }, 1800);
+}
+
+// ── Eliminated チェック（ラウンド後） ──
+function checkEliminated(afterRoundCb){
+  var eliminated = players.filter(function(p){ return p.active && p.chips < BB; });
+  if(eliminated.length === 0){ afterRoundCb(); return; }
+
+  // 脱落アニメーション表示してから
+  var msg = eliminated.map(function(p){ return p.name; }).join(', ') + ' が脱落！';
+  eliminated.forEach(function(p){ p.active = false; p.eliminated = true; });
+
+  var meElim = eliminated.some(function(p){ return p.isMe; });
+  if(meElim && offlineMode){
+    renderAll();
+    showMsg('ELIMINATED', 'チップが不足しました。<br>あなたは脱落しました。', 'ロビーへ', function(){
+      document.getElementById('back-btn-wrap').style.display='none'; showScreen('screen-lobby'); offlineMode = false;
+    }, '');
+    return;
+  }
+  renderAll();
+  // 他のプレイヤーのみ脱落の場合は続行
+  afterRoundCb();
 }
 
 // ── アクションバブル表示 ──
@@ -1107,8 +1357,25 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
 }
 
+// グローバルに公開（ボタンのonclickから呼び出せるよう）
+window._pokerShowScreen = showScreen;
+window._pokerGoLobby = function(){
+  document.getElementById('back-btn-wrap').style.display='none';
+  offlineMode = false;
+  showScreen('screen-lobby');
+};
+
 })();
 </script>
 
+<div id="confirm-overlay">
+  <div id="confirm-box">
+    <div id="confirm-msg">ゲームを中断して<br>ロビーに戻りますか？</div>
+    <div id="confirm-btns">
+      <button id="confirm-yes" onclick="document.getElementById('confirm-overlay').classList.remove('show');window._pokerGoLobby();">戻る</button>
+      <button id="confirm-no" onclick="document.getElementById('confirm-overlay').classList.remove('show');">続ける</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
