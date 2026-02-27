@@ -923,7 +923,12 @@ function startRoundOffline(){
   // 初回のみ initialChips を設定
   if(!_initialChips) _initialChips = +document.getElementById('off-chips').value||500;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
-  players.forEach(function(p){if(p.chips<5)p.active=false;p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;});
+  players.forEach(function(p){
+    // eliminatedフラグが立っているプレイヤーのみ非アクティブにする
+    // (リバイ済みはeliminated=falseなのでそのまま続行)
+    if(p.eliminated) p.active=false;
+    p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;
+  });
   var active=players.filter(function(p){return p.active;});
   if(active.length<2){
     var w=active[0]||players[0];
@@ -1011,7 +1016,7 @@ function doShowdownOffline(){
   cont.forEach(function(p){p.best=evalHand(p.hole.concat(comm));});
   cont.sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
   // calcSidePotsと同じロジックで分配（オンラインと統一）
-  var pots2=calcSidePots();
+  var pots2=calcSidePots(cont);
   var actualWins=[];
   pots2.forEach(function(sidePot){
     if(!sidePot.eligible||sidePot.eligible.length===0) return;
@@ -1568,10 +1573,11 @@ function startRound(){
   _cpuQueue=[];_cpuBusy=false;
   _allInRevealed=false;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
-  // チップ<BBのプレイヤーは checkEliminated で処理済みのため、
-  // active のままチップ不足のプレイヤーがいた場合のみ追加処理
+  // eliminatedフラグ済みのプレイヤーのみ非アクティブ
+  // (checkEliminated → startRound の順で呼ばれるので
+  //  リバイ済みは eliminated=false で active=true のまま)
   players.forEach(function(p){
-    if(p.active && p.chips < BB){ p.active=false; p.eliminated=true; }
+    if(p.eliminated) p.active=false;
     p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;
   });
   var active=players.filter(function(p){return p.active;});
@@ -1889,12 +1895,12 @@ function doShowdown(){
     });
   });
 }
-function calcSidePots(){
-  // 全プレイヤー（フォールド含む）のtotalBetからサイドポットを計算
-  // eligible = フォールドしていない（勝ちを争える）プレイヤー
+function calcSidePots(contPlayers){
+  // contPlayers: フォールドしていないショーダウン参加者（best設定済み）
+  // allContrib: 全プレイヤー（フォールド含む、totalBet>0）
   var allContrib=players.filter(function(p){return p.totalBet>0;});
-  var nonFolded=players.filter(function(p){return p.active&&!p.folded;});
-  // ユニークなtotalBet値を昇順で取得
+  var nonFolded=contPlayers||players.filter(function(p){return p.active&&!p.folded;});
+  // ユニークなtotalBet値を昇順で取得（全拠出者から）
   var caps=[];
   allContrib.forEach(function(p){if(caps.indexOf(p.totalBet)<0)caps.push(p.totalBet);});
   caps.sort(function(a,b){return a-b;});
@@ -1902,19 +1908,17 @@ function calcSidePots(){
   var prevCap=0;
   caps.forEach(function(cap){
     var potAmt=0;
-    // このレベルへの拠出額を全contributor（フォールド含む）から集める
     allContrib.forEach(function(p){
       potAmt+=Math.min(p.totalBet,cap)-Math.min(p.totalBet,prevCap);
     });
-    // eligibleはフォールドしておらず、かつこのレベル以上賭けたプレイヤー
+    // eligibleはcontPlayersの中でこのレベル以上賭けたプレイヤー
     var eligible=nonFolded.filter(function(p){return p.totalBet>=cap;});
     if(potAmt>0 && eligible.length>0) pots.push({amount:potAmt, eligible:eligible});
     prevCap=cap;
   });
-  // サイドポット合計とpot変数が一致しない場合の補正
+  // 合計補正
   var potsTotal=pots.reduce(function(s,p){return s+p.amount;},0);
   if(potsTotal<pot && pots.length>0){
-    // 差分を最後のポットに加算（端数処理）
     pots[pots.length-1].amount+=pot-potsTotal;
   }
   return pots;
@@ -1924,7 +1928,8 @@ function finishSD(cont,holes){
   cont.forEach(function(p){if(holes[p.idx])p.hole=holes[p.idx];p.best=evalHand(p.hole.concat(comm));});
   cont.sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
   // サイドポット計算
-  var pots=calcSidePots();
+  // cont を渡すことで eligible が確実に best 設定済みの同一オブジェクトを参照する
+  var pots=calcSidePots(cont);
   var allWinners=[];
   // 分配前に各プレイヤーのchipsを確認（二重加算防止）
   var chipsAdded={};
@@ -2222,6 +2227,8 @@ function checkEliminated(afterRoundCb){
     if((p.rebuyCount||0) > 0){
       purchaseHistory = '<div style="font-size:10px;color:rgba(255,200,100,.7);margin-top:6px;">これまでの購入: 初回 + ' + p.rebuyCount + '回</div>';
     }
+    // rebuyAmt を先に確定させる
+    var rebuyAmt = _initialChips || (players[0]?players[0].chipsBefore:500)||500;
     var roleLabel = p.isCpu ? '（CPU）' : '';
     mbody.innerHTML = '<b style="color:var(--gold-light);">' + p.name + roleLabel + '</b> のチップが不足しました。<br>' +
       '<span style="font-size:11px;color:rgba(255,255,255,.6);">' + label + ' として ' + rebuyAmt + ' チップを追加しますか？</span>' +
@@ -2240,7 +2247,6 @@ function checkEliminated(afterRoundCb){
     var btnRebuy = document.createElement('button');
     btnRebuy.className = 'mnext';
     btnRebuy.style.background = 'linear-gradient(135deg,#1a6a1a,#2ea02e)';
-    var rebuyAmt = _initialChips || (players[0]?players[0].chipsBefore:500)||500;
     btnRebuy.textContent = '✅ チップ購入 (' + rebuyAmt + ')';
     btnRebuy.onclick = function(){
       if(!_initialChips) _initialChips=rebuyAmt;
