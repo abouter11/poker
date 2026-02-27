@@ -922,7 +922,9 @@ function advanceOffline(){
   var nf=players.filter(function(p){return p.active&&!p.folded;});
   if(nf.length===1){nf[0].chips+=pot;renderAll();showMsg('ラウンド終了','<span class="wn">'+nf[0].name+'</span>の勝利！（全員フォールド）','次のラウンド',function(){checkEliminated(function(){startRoundOffline();});});return;}
   var ca=players.filter(function(p){return p.active&&!p.folded&&!p.allIn;});
-  if(ca.length<=1||(ca.every(function(p){return acts.indexOf(p.idx)>=0;})&&ca.every(function(p){return p.bet===curBet;}))){nextPhaseOffline();return;}
+  var allActed2=ca.every(function(p){return acts.indexOf(p.idx)>=0;});
+  var allBetsEqual2=ca.every(function(p){return p.bet>=curBet;});
+  if(ca.length===0||(allActed2&&allBetsEqual2)){nextPhaseOffline();return;}
   curIdx=nxt(curIdx);renderAll();scheduleOfflineAction();
 }
 
@@ -1010,10 +1012,16 @@ function renderActionOffline(){
   var br=document.getElementById('brow');br.innerHTML='';
   function ab(lbl,cls,fn){var b=document.createElement('button');b.className='ab '+cls;b.textContent=lbl;b.onclick=fn;br.appendChild(b);}
   ab('フォールド','ab-fold',function(){sendOffline('fold',0);});
-  if(toC<=0)ab('チェック','ab-check',function(){sendOffline('check',0);});
-  else ab('コール('+Math.min(toC,p.chips)+')','ab-call',function(){sendOffline('call',0);});
-  if(p.chips>toC)ab('レイズ','ab-raise',function(){sendOffline('raise',snap5(+document.getElementById('rinp').value||0));});
-  if(p.chips>0) ab('オールイン ('+p.chips+')','ab-allin',function(){sendOffline('allin',0);});
+  if(toC<=0){
+    ab('チェック','ab-check',function(){sendOffline('check',0);});
+  } else if(toC>=p.chips){
+    ab('コール/オールイン('+p.chips+')','ab-call',function(){sendOffline('allin',0);});
+  } else {
+    ab('コール('+toC+')','ab-call',function(){sendOffline('call',0);});
+  }
+  if(p.chips>toC) ab('レイズ','ab-raise',function(){sendOffline('raise',snap5(+document.getElementById('rinp').value||0));});
+  if(p.chips>0 && toC>0 && toC<p.chips) ab('オールイン ('+p.chips+')','ab-allin',function(){sendOffline('allin',0);});
+  else if(p.chips>0 && toC<=0) ab('オールイン ('+p.chips+')','ab-allin',function(){sendOffline('allin',0);});
 }
 
 function sendOffline(action,amount){
@@ -1023,7 +1031,15 @@ function sendOffline(action,amount){
   else if(action==='check'){}
   else if(action==='call'){var tc=Math.min(curBet-p.bet,p.chips);p.chips-=tc;p.bet+=tc;p.totalBet+=tc;pot+=tc;if(!p.chips)p.allIn=true;}
   else if(action==='raise'){var nb=Math.min(Math.max(amount,curBet+1),p.chips+p.bet);lastRaise=Math.max(nb-curBet,lastRaise);curBet=nb;var cost=nb-p.bet;p.chips-=cost;p.bet=nb;p.totalBet+=cost;pot+=cost;if(!p.chips)p.allIn=true;acts=[myIdx];}
-  else if(action==='allin'){var nb2=p.chips+p.bet;if(nb2>curBet){lastRaise=Math.max(nb2-curBet,lastRaise);curBet=nb2;acts=[myIdx];}pot+=p.chips;p.bet=nb2;p.totalBet+=p.chips;p.chips=0;p.allIn=true;}
+  else if(action==='allin'){
+    var allAmt3=p.chips; var nb3=p.bet+allAmt3; var raiseAmt3=nb3-curBet;
+    if(nb3>curBet){
+      var isFullRaise3=(raiseAmt3>=lastRaise);
+      lastRaise=Math.max(raiseAmt3,lastRaise); curBet=nb3;
+      if(isFullRaise3) acts=[myIdx];
+    }
+    pot+=allAmt3;p.bet=nb3;p.totalBet+=allAmt3;p.chips=0;p.allIn=true;
+  }
   if(acts.indexOf(myIdx)<0)acts.push(myIdx);
   renderAll();
   showActionBubble(myIdx, action, amount);
@@ -1369,18 +1385,47 @@ function nxt(from){var i=(from+1)%players.length,t=0;while((!players[i].active||
 
 function applyAction(d){
   var p=players[d.playerIdx];if(!p)return;
-  if(d.action==='fold'){p.folded=true;}
-  else if(d.action==='call'){var tc=Math.min(curBet-p.bet,p.chips);p.chips-=tc;p.bet+=tc;p.totalBet+=tc;pot+=tc;if(!p.chips)p.allIn=true;}
-  else if(d.action==='raise'){var nb=Math.min(Math.max(d.amount,curBet+1),p.chips+p.bet);lastRaise=Math.max(nb-curBet,lastRaise);curBet=nb;var cost=nb-p.bet;p.chips-=cost;p.bet=nb;p.totalBet+=cost;pot+=cost;if(!p.chips)p.allIn=true;acts=[d.playerIdx];}
+  if(d.action==='fold'){
+    p.folded=true;
+  }
+  else if(d.action==='check'){
+    // チェック：何もしない
+  }
+  else if(d.action==='call'){
+    var tc=Math.min(curBet-p.bet, p.chips);
+    p.chips-=tc; p.bet+=tc; p.totalBet+=tc; pot+=tc;
+    if(p.chips<=0){ p.chips=0; p.allIn=true; }
+  }
+  else if(d.action==='raise'){
+    var nb=Math.min(Math.max(d.amount, curBet+lastRaise), p.chips+p.bet);
+    var raiseBy=nb-curBet;
+    lastRaise=Math.max(raiseBy, BB);
+    curBet=nb;
+    var cost=nb-p.bet;
+    p.chips-=cost; p.bet=nb; p.totalBet+=cost; pot+=cost;
+    if(p.chips<=0){ p.chips=0; p.allIn=true; }
+    acts=[d.playerIdx]; // レイズは全員再アクション
+  }
   else if(d.action==='allin'){
-    var allInAmt=p.chips; // 残チップ全部
-    var nb2=p.bet+allInAmt;
-    if(nb2>curBet){lastRaise=Math.max(nb2-curBet,lastRaise);curBet=nb2;acts=[d.playerIdx];}
-    pot+=allInAmt;p.bet=nb2;p.totalBet+=allInAmt;p.chips=0;p.allIn=true;
+    var allInAmt=p.chips;
+    var newBet=p.bet+allInAmt;
+    var raiseAmt=newBet-curBet;
+    if(newBet>curBet){
+      // フルレイズ（lastRaise以上の増額）かどうか判定
+      var isFullRaise=(raiseAmt>=lastRaise);
+      lastRaise=Math.max(raiseAmt, lastRaise);
+      curBet=newBet;
+      if(isFullRaise){
+        acts=[d.playerIdx]; // フルレイズ → 全員再アクション
+      }
+      // フルレイズ未満のオールインは既アクション済みプレイヤーは再アクション不要
+      // acts はそのまま（このプレイヤーを追加するのみ）
+    }
+    pot+=allInAmt; p.bet=newBet; p.totalBet+=allInAmt; p.chips=0; p.allIn=true;
   }
   if(acts.indexOf(d.playerIdx)<0) acts.push(d.playerIdx);
   renderAll();
-  showActionBubble(d.playerIdx, d.action, d.amount);
+  showActionBubble(d.playerIdx, d.action, d.amount||0);
 }
 
 function runCpuTurn(){
@@ -1407,8 +1452,14 @@ function runCpuTurn(){
       else{lastRaise=Math.max(nb-curBet,lastRaise);curBet=nb;p.chips-=cost;p.bet=nb;p.totalBet+=cost;pot+=cost;if(p.chips<=0){p.chips=0;p.allIn=true;}acts=[savedIdx];}
     }
     else if(dec.action==='allin'){
-      var allAmt=p.chips;var nb2=p.bet+allAmt;
-      if(nb2>curBet){lastRaise=Math.max(nb2-curBet,lastRaise);curBet=nb2;acts=[savedIdx];}
+      var allAmt=p.chips; var nb2=p.bet+allAmt;
+      var raiseAmt2=nb2-curBet;
+      if(nb2>curBet){
+        var isFullRaise2=(raiseAmt2>=lastRaise);
+        lastRaise=Math.max(raiseAmt2,lastRaise);
+        curBet=nb2;
+        if(isFullRaise2) acts=[savedIdx];
+      }
       pot+=allAmt;p.bet=nb2;p.totalBet+=allAmt;p.chips=0;p.allIn=true;
     }
     if(acts.indexOf(savedIdx)<0) acts.push(savedIdx);
@@ -1424,7 +1475,10 @@ function advance(){
   var nf=players.filter(function(p){return p.active&&!p.folded;});
   if(nf.length===1){nf[0].chips+=pot;pushState({result:{title:'ラウンド終了',body:'<span class="wn">'+nf[0].name+'</span>の勝利！（全員フォールド）',ch:''},waitFor:null});return;}
   var ca=players.filter(function(p){return p.active&&!p.folded&&!p.allIn;});
-  if(ca.length<=1||(ca.every(function(p){return acts.indexOf(p.idx)>=0;})&&ca.every(function(p){return p.bet===curBet;}))){nextPhase();return;}
+  // 全員アクション済み かつ ベット額が揃っている（またはオールイン済み）
+  var allActed=ca.every(function(p){return acts.indexOf(p.idx)>=0;});
+  var allBetsEqual=ca.every(function(p){return p.bet>=curBet;});
+  if(ca.length===0 || (allActed && allBetsEqual)){nextPhase();return;}
   curIdx=nxt(curIdx);
   var curP=players[curIdx];
   if(isHost && curP && curP.isCpu && !curP.folded && !curP.allIn){
@@ -1469,37 +1523,49 @@ function doShowdown(){
     });
   });
 }
+function calcSidePots(){
+  // 全プレイヤーのtotalBetからサイドポット一覧を計算
+  // 戻り値: [{amount, eligible:[playerIdx]}] のリスト
+  var allActive=players.filter(function(p){return p.active&&!p.folded;});
+  // totalBetが0のプレイヤーを除いた全プレイヤー
+  var allContrib=players.filter(function(p){return p.totalBet>0;});
+  // ユニークなtotalBet値を昇順で取得
+  var caps=[...new Set(allContrib.map(function(p){return p.totalBet;}))].sort(function(a,b){return a-b;});
+  var pots=[];
+  var prevCap=0;
+  caps.forEach(function(cap){
+    var potAmt=0;
+    allContrib.forEach(function(p){
+      potAmt+=Math.min(p.totalBet,cap)-Math.min(p.totalBet,prevCap);
+    });
+    // このポットに参加できるのはtotalBet>=capのアクティブ非フォールドプレイヤー
+    var eligible=allActive.filter(function(p){return p.totalBet>=cap;});
+    if(potAmt>0) pots.push({amount:potAmt, eligible:eligible});
+    prevCap=cap;
+  });
+  return pots;
+}
+
 function finishSD(cont,holes){
   cont.forEach(function(p){if(holes[p.idx])p.hole=holes[p.idx];p.best=evalHand(p.hole.concat(comm));});
   cont.sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
-  // サイドポット分配: totalBetが少ないプレイヤーは少ない額しか勝てない
-  var allP=players.filter(function(p){return p.active||p.eliminated;});
-  var remaining=pot;
-  var contCopy=cont.slice(); // ランク順コピー
-  // 各コンテスタントをtotalBet昇順で処理
-  var byTotalBet=cont.slice().sort(function(a,b){return a.totalBet-b.totalBet;});
-  var processed={};
-  byTotalBet.forEach(function(winner){
-    if(processed[winner.idx]) return;
-    // このプレイヤーのtotalBet以下のプレイヤーから集めたポット
-    var sidePot=0;
-    var cap=winner.totalBet;
-    players.forEach(function(p){
-      var contrib=Math.min(p.totalBet,cap);
-      if(!processed[p.idx]||p.idx===winner.idx) sidePot+=contrib;
-    });
-    // このサイドポットに参加できるコンテスタント（totalBet>=cap）
-    var eligible=contCopy.filter(function(p){return !processed[p.idx];});
-    var topSc=eligible[0].best.score; // すでにランク順
-    var sideWins=eligible.filter(function(p){return cmpSc(p.best.score,topSc)===0;});
-    var sideShare=snap5(Math.floor(sidePot/sideWins.length));
-    sideWins.forEach(function(w){w.chips+=sideShare;remaining-=sideShare;});
-    processed[winner.idx]=true;
+  // サイドポット計算
+  var pots=calcSidePots();
+  var allWinners=[];
+  pots.forEach(function(sidePot){
+    // このポットの参加者の中から最強ハンドを持つプレイヤーへ分配
+    var eligible=sidePot.eligible.slice().sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
+    var topSc=eligible[0].best.score;
+    var winners=eligible.filter(function(p){return cmpSc(p.best.score,topSc)===0;});
+    var share=Math.floor(sidePot.amount/winners.length);
+    var remainder=sidePot.amount-(share*winners.length);
+    winners.forEach(function(w){w.chips+=share;if(allWinners.indexOf(w)<0)allWinners.push(w);});
+    // 端数は最初の勝者へ
+    if(remainder>0) winners[0].chips+=remainder;
   });
-  // 残余チップを最終勝者に
-  if(remaining>0) contCopy[0].chips+=remaining;
+  if(allWinners.length===0) allWinners=cont.slice(0,1);
   var top=cont[0].best.score;
-  var wins=cont.filter(function(p){return cmpSc(p.best.score,top)===0;});
+  var wins=allWinners;
   var share=0;
   var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+'</span><br>ポット: '+pot;
   if(wins.length>1) body+='<br>（'+share+'ずつ山分け）';
@@ -1590,10 +1656,17 @@ function renderAction(){
   var br=document.getElementById('brow');br.innerHTML='';
   function ab(lbl,cls,fn){var b=document.createElement('button');b.className='ab '+cls;b.textContent=lbl;b.onclick=fn;br.appendChild(b);}
   ab('フォールド','ab-fold',function(){send('fold',0);});
-  if(toC<=0) ab('チェック','ab-check',function(){send('check',0);});
-  else ab('コール('+Math.min(toC,p.chips)+')','ab-call',function(){send('call',0);});
+  if(toC<=0){
+    ab('チェック','ab-check',function(){send('check',0);});
+  } else if(toC>=p.chips){
+    // コール額がチップ全額以上 → オールインコール
+    ab('コール/オールイン('+p.chips+')','ab-call',function(){send('allin',0);});
+  } else {
+    ab('コール('+toC+')','ab-call',function(){send('call',0);});
+  }
   if(p.chips>toC) ab('レイズ','ab-raise',function(){send('raise',snap5(+document.getElementById('rinp').value||0));});
-  if(p.chips>0) ab('オールイン ('+p.chips+')','ab-allin',function(){send('allin',0);});
+  if(p.chips>0 && toC>0 && toC<p.chips) ab('オールイン ('+p.chips+')','ab-allin',function(){send('allin',0);});
+  else if(p.chips>0 && toC<=0) ab('オールイン ('+p.chips+')','ab-allin',function(){send('allin',0);});
 }
 
 function send(action,amount){
