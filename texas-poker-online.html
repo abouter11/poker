@@ -1012,16 +1012,19 @@ function renderActionOffline(){
   var br=document.getElementById('brow');br.innerHTML='';
   function ab(lbl,cls,fn){var b=document.createElement('button');b.className='ab '+cls;b.textContent=lbl;b.onclick=fn;br.appendChild(b);}
   ab('フォールド','ab-fold',function(){sendOffline('fold',0);});
+  var minRaise2=curBet+lastRaise;
+  var canRaise2=(p.chips+p.bet)>minRaise2 && p.chips>toC;
   if(toC<=0){
     ab('チェック','ab-check',function(){sendOffline('check',0);});
+    if(canRaise2) ab('レイズ','ab-raise',function(){sendOffline('raise',snap5(+document.getElementById('rinp').value||0));});
+    if(p.chips>0) ab('オールイン ('+p.chips+')','ab-allin',function(){sendOffline('allin',0);});
   } else if(toC>=p.chips){
     ab('コール/オールイン('+p.chips+')','ab-call',function(){sendOffline('allin',0);});
   } else {
     ab('コール('+toC+')','ab-call',function(){sendOffline('call',0);});
+    if(canRaise2) ab('レイズ','ab-raise',function(){sendOffline('raise',snap5(+document.getElementById('rinp').value||0));});
+    ab('オールイン ('+p.chips+')','ab-allin',function(){sendOffline('allin',0);});
   }
-  if(p.chips>toC) ab('レイズ','ab-raise',function(){sendOffline('raise',snap5(+document.getElementById('rinp').value||0));});
-  if(p.chips>0 && toC>0 && toC<p.chips) ab('オールイン ('+p.chips+')','ab-allin',function(){sendOffline('allin',0);});
-  else if(p.chips>0 && toC<=0) ab('オールイン ('+p.chips+')','ab-allin',function(){sendOffline('allin',0);});
 }
 
 function sendOffline(action,amount){
@@ -1656,17 +1659,23 @@ function renderAction(){
   var br=document.getElementById('brow');br.innerHTML='';
   function ab(lbl,cls,fn){var b=document.createElement('button');b.className='ab '+cls;b.textContent=lbl;b.onclick=fn;br.appendChild(b);}
   ab('フォールド','ab-fold',function(){send('fold',0);});
+  var minRaise=curBet+lastRaise; // 最低レイズ後のベット総額
+  var canRaise=(p.chips+p.bet)>minRaise && p.chips>toC; // レイズに必要なチップが足りる
   if(toC<=0){
+    // チェック可能（コール不要）
     ab('チェック','ab-check',function(){send('check',0);});
+    if(canRaise) ab('レイズ','ab-raise',function(){send('raise',snap5(+document.getElementById('rinp').value||0));});
+    if(p.chips>0) ab('オールイン ('+p.chips+')','ab-allin',function(){send('allin',0);});
   } else if(toC>=p.chips){
-    // コール額がチップ全額以上 → オールインコール
+    // コール額がチップ全額以上 → コールのみ（フォールドかオールインコール）
     ab('コール/オールイン('+p.chips+')','ab-call',function(){send('allin',0);});
+    // チップが足りないのでレイズ・通常コール不可
   } else {
+    // 通常コール
     ab('コール('+toC+')','ab-call',function(){send('call',0);});
+    if(canRaise) ab('レイズ','ab-raise',function(){send('raise',snap5(+document.getElementById('rinp').value||0));});
+    ab('オールイン ('+p.chips+')','ab-allin',function(){send('allin',0);});
   }
-  if(p.chips>toC) ab('レイズ','ab-raise',function(){send('raise',snap5(+document.getElementById('rinp').value||0));});
-  if(p.chips>0 && toC>0 && toC<p.chips) ab('オールイン ('+p.chips+')','ab-allin',function(){send('allin',0);});
-  else if(p.chips>0 && toC<=0) ab('オールイン ('+p.chips+')','ab-allin',function(){send('allin',0);});
 }
 
 function send(action,amount){
