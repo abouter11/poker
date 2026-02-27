@@ -1284,6 +1284,12 @@ function onState(st){
   if(isHost){
     if(st.showdown){handleSD(st.showdown);return;}
     if(st.result){hideInfo();document.getElementById('ap').style.display='none';handleResult(st.result);return;}
+    // ホスト自身のターンならアクションパネルを表示
+    if(st.waitFor===myId){
+      hideInfo();
+      document.getElementById('ap').style.display='block';
+      renderAction();
+    }
     return;
   }
   var prevPhase=_lastPhase, prevCommLen=_lastCommLen;
