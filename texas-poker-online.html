@@ -1039,7 +1039,7 @@ function doShowdownOffline(){
     var isW=wins.indexOf(p)>=0;
     var gained=p.chips-p.chipsBefore; // chipsBefore はショーダウン前に保存
     var gainStr=gained>=0?'<span style="color:#7f7;">+'+gained+'</span>':'<span style="color:#f77;">'+gained+'</span>';
-    var isElim2=p.eliminated||(p.chips<BB&&p.chips>=0);
+    var isElim2=!isW&&(p.eliminated||(p.chips<BB&&p.chips>=0));
     var bg=isW?'rgba(201,168,76,.18)':inCont?'rgba(0,0,0,.35)':'rgba(80,0,0,.25)';
     var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
     ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
@@ -1504,9 +1504,10 @@ function startRound(){
   _cpuQueue=[];_cpuBusy=false;
   _allInRevealed=false;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
-  // チップ不足で脱落判定（BBに届かない場合）
+  // チップ<BBのプレイヤーは checkEliminated で処理済みのため、
+  // active のままチップ不足のプレイヤーがいた場合のみ追加処理
   players.forEach(function(p){
-    if(p.active && p.chips < BB) { p.active=false; p.eliminated=true; }
+    if(p.active && p.chips < BB){ p.active=false; p.eliminated=true; }
     p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;
   });
   var active=players.filter(function(p){return p.active;});
@@ -1908,7 +1909,7 @@ function finishSD(cont,holes){
     var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
     ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
     ch+='<div style="flex:1;min-width:0;">';
-    var isElim=p.eliminated||(!p.active&&!inCont)||(p.chips<BB&&p.chips>=0&&!p.eliminated);
+    var isElim=!isW&&(p.eliminated||(!p.active&&!inCont)||(p.chips<BB&&p.chips>=0&&!p.eliminated));
     var detailTxt=inCont?handDetail(p.best.score):'';
     var statusTxt=isElim?'💀 ELIMINATED':inCont?HN[p.best.score.rank]:'FOLD';
     var prefix=isW?'🏆 ':isElim?'':inCont?'':'❌ ';
@@ -1938,7 +1939,8 @@ function handleSD(sd){
   renderAll();
   showMsg('ショーダウン',sd.body,'次のラウンド',function(){
     if(isHost){
-      startRound();
+      // checkEliminated を経由してリバイ処理してから次ラウンドへ
+      checkEliminated(function(){ startRound(); });
     } else {
       _lastPhase=-1; _lastCommLen=0;
       showInfo('次のラウンドを待っています...');
@@ -1957,7 +1959,7 @@ function handleResult(rr){
   } else {
     showMsg(rr.title,rr.body,'次のラウンド',function(){
       if(isHost){
-        startRound();
+        checkEliminated(function(){ startRound(); });
       } else {
         _lastPhase=-1; _lastCommLen=0;
         showInfo('次のラウンドを待っています...');
@@ -2181,8 +2183,10 @@ function checkEliminated(afterRoundCb){
     var btnRebuy = document.createElement('button');
     btnRebuy.className = 'mnext';
     btnRebuy.style.background = 'linear-gradient(135deg,#1a6a1a,#2ea02e)';
-    btnRebuy.textContent = '✅ チップ購入 (' + _initialChips + ')';
+    var rebuyAmt = _initialChips || (players[0]?players[0].chipsBefore:500)||500;
+    btnRebuy.textContent = '✅ チップ購入 (' + rebuyAmt + ')';
     btnRebuy.onclick = function(){
+      if(!_initialChips) _initialChips=rebuyAmt;
       doRebuy(p);
       btnWrap.innerHTML = '';
       mnext.style.display = '';
