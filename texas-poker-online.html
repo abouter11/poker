@@ -901,6 +901,7 @@ function hideCpuBar(){document.getElementById('cpu-bar').style.display='none';}
 
 // ── オフライン ゲームループ ──
 function startRoundOffline(){
+  _allInRevealed=false;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   players.forEach(function(p){if(p.chips<5)p.active=false;p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;});
   var active=players.filter(function(p){return p.active;});
@@ -1018,7 +1019,7 @@ function doShowdownOffline(){
     var isW=wins.indexOf(p)>=0;
     var gained=p.chips-p.chipsBefore; // chipsBefore はショーダウン前に保存
     var gainStr=gained>=0?'<span style="color:#7f7;">+'+gained+'</span>':'<span style="color:#f77;">'+gained+'</span>';
-    var isElim2=p.eliminated||false;
+    var isElim2=p.eliminated||(p.chips<BB&&p.chips>=0);
     var bg=isW?'rgba(201,168,76,.18)':inCont?'rgba(0,0,0,.35)':'rgba(80,0,0,.25)';
     var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
     ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
@@ -1283,6 +1284,7 @@ var curBet=0, lastRaise=20, acts=[];
 var dealerIdx=0, curIdx=0, myHole=[], lastActTs=0;
 var gamePath='', holePfx='';
 var PNAMES=['PRE-FLOP','FLOP','TURN','RIVER','SHOWDOWN'];
+var _allInRevealed=false; // ALL IN時のホール公開フラグ
 
 function launchGame(room){
   fbOff(roomPath);
@@ -1353,7 +1355,12 @@ function onState(st){
     players[i].folded=sp.folded;players[i].allIn=sp.allIn;players[i].active=sp.active;
   });
   if(myHole.length===2&&players[myIdx]) players[myIdx].hole=myHole;
-  if(st.reveal) Object.keys(st.reveal).forEach(function(i){if(players[i])players[i].hole=st.reveal[i];});
+  if(st.reveal){
+    Object.keys(st.reveal).forEach(function(i){if(players[i])players[i].hole=st.reveal[i];});
+    // ALL INフェーズのrevealならフラグをセット
+    var hasAllIn=players.some(function(p){return p.active&&!p.folded&&p.allIn;});
+    if(hasAllIn) _allInRevealed=true;
+  }
   renderAll();
   // 非ホスト: フェーズ変化時にオーバーレイ表示
   if(phase>prevPhase && prevPhase>=0 && phase<=3){
@@ -1419,6 +1426,7 @@ function pushState(extra){
 
 function startRound(){
   _cpuQueue=[];_cpuBusy=false;
+  _allInRevealed=false;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   // チップ不足で脱落判定（BBに届かない場合）
   players.forEach(function(p){
@@ -1627,6 +1635,24 @@ function advance(){
 
 // 全員オールイン時: フロップ→ターン→リバーを順番に演出付きで公開してショーダウン
 function rundownAllIn(){
+  // ALL IN参加者のホールカードを全員に公開
+  var revealMap={};
+  players.forEach(function(p){
+    if(p.active && !p.folded && p.hole && p.hole.length===2){
+      revealMap[p.idx]=p.hole;
+    }
+  });
+  if(gamePath){
+    // オンライン: pushStateのrevealで非ホストに伝達
+    pushState({reveal:revealMap, waitFor:null});
+  }
+  // ローカルも即座に反映（自分の画面）
+  _allInRevealed=true;
+  Object.keys(revealMap).forEach(function(i){
+    if(players[i]) players[i].hole=revealMap[i];
+  });
+  renderAll();
+
   function revealStep(cb){
     if(comm.length>=5){ cb(); return; }
     // 次に公開するフェーズを決定
@@ -1776,7 +1802,7 @@ function finishSD(cont,holes){
     var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
     ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
     ch+='<div style="flex:1;min-width:0;">';
-    var isElim=p.eliminated||(!p.active&&!inCont);
+    var isElim=p.eliminated||(!p.active&&!inCont)||(p.chips<BB&&p.chips>=0&&!p.eliminated);
     var detailTxt=inCont?handDetail(p.best.score):'';
     var statusTxt=isElim?'💀 ELIMINATED':inCont?HN[p.best.score.rank]:'FOLD';
     var prefix=isW?'🏆 ':isElim?'':inCont?'':'❌ ';
@@ -1903,10 +1929,11 @@ function renderAll(){
     if(i===dealerIdx) s.classList.add('dealer');
     // カード表示ロジック:
     // - 自分のカード: 常に表向き
+    // - ALL IN中(rundownAllIn実行中): 全参加者表向き
     // - CPU/他プレイヤー: ショーダウン(phase>=4)かつrevealされた場合のみ表向き
     var h;
     if(p.isMe){ h=myHole.length?myHole:p.hole; }
-    else if(phase>=4&&!p.folded&&p.hole&&p.hole.length===2){ h=p.hole; }
+    else if((phase>=4||_allInRevealed)&&!p.folded&&p.hole&&p.hole.length===2){ h=p.hole; }
     else { h=null; }
     var show=h&&h.length===2;
     var ch=show?(cH(h[0],true)+cH(h[1],true)):(cH(null,true)+cH(null,true));
