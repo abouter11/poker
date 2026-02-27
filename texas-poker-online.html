@@ -225,6 +225,22 @@ letter-spacing:6px;margin-bottom:6px;}
       <div class="slabel">ルームコード（タップでコピー）</div>
       <div class="code-big" id="code-disp">------</div>
       <div class="code-hint">このコードを対戦相手にシェア</div>
+      <div id="invite-url-wrap" style="margin:8px 0 4px;display:none;">
+        <div style="font-size:10px;color:rgba(255,255,255,.4);font-family:Cinzel,serif;letter-spacing:1px;margin-bottom:4px;">🔗 招待リンク（タップでコピー）</div>
+        <div id="invite-url-disp" style="
+          background:rgba(0,0,0,.5);
+          border:1px solid rgba(201,168,76,.35);
+          border-radius:8px;
+          padding:8px 12px;
+          font-size:11px;
+          color:var(--gold-light);
+          word-break:break-all;
+          cursor:pointer;
+          text-align:center;
+          line-height:1.5;
+        "></div>
+        <div id="invite-copy-hint" style="font-size:10px;color:rgba(255,255,255,.3);text-align:center;margin-top:3px;">タップでURLをコピー</div>
+      </div>
       <div id="host-settings" style="display:none;margin-top:12px;padding:10px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(201,168,76,.2);">
         <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold-light);letter-spacing:2px;margin-bottom:8px;">HOST SETTINGS</div>
         <div class="row" style="margin-bottom:8px;">
@@ -1128,6 +1144,12 @@ document.getElementById('btn-create').addEventListener('click', function(){
   fbSet(roomPath, data, function(){
     document.getElementById('room-created').style.display='block';
     document.getElementById('code-disp').textContent = code;
+    // 招待URL生成
+    var baseUrl = window.location.href.split('?')[0].split('#')[0];
+    var inviteUrl = baseUrl + '?join=' + code;
+    var urlDisp = document.getElementById('invite-url-disp');
+    urlDisp.textContent = inviteUrl;
+    document.getElementById('invite-url-wrap').style.display='block';
     // ホスト設定パネル表示
     document.getElementById('host-settings').style.display='block';
     document.getElementById('btn-start').style.display='block';
@@ -1140,6 +1162,31 @@ document.getElementById('btn-create').addEventListener('click', function(){
 document.getElementById('code-disp').addEventListener('click', function(){
   try{navigator.clipboard.writeText(this.textContent);}catch(e){}
   var el=this; el.style.color='#0f0'; setTimeout(function(){el.style.color='';},800);
+});
+document.getElementById('invite-url-disp').addEventListener('click', function(){
+  var url=this.textContent;
+  var hint=document.getElementById('invite-copy-hint');
+  if(navigator.share){
+    navigator.share({title:'ポーカーに招待',text:'一緒にポーカーをしよう！',url:url}).catch(function(){});
+  } else {
+    try{navigator.clipboard.writeText(url);}catch(e){
+      // フォールバック
+      var ta=document.createElement('textarea');
+      ta.value=url; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{document.execCommand('copy');}catch(e2){}
+      document.body.removeChild(ta);
+    }
+    var el=this;
+    el.style.borderColor='rgba(100,255,100,.6)';
+    el.style.color='#7f7';
+    hint.textContent='✓ コピーしました！';
+    hint.style.color='rgba(100,255,100,.8)';
+    setTimeout(function(){
+      el.style.borderColor='';el.style.color='';
+      hint.textContent='タップでURLをコピー';hint.style.color='';
+    },1500);
+  }
 });
 
 function watchLobby(){
@@ -1240,6 +1287,30 @@ document.getElementById('btn-start').addEventListener('click', function(){
 
 document.getElementById('btn-join').addEventListener('click', doJoin);
 document.getElementById('join-code').addEventListener('keydown', function(e){if(e.key==='Enter')doJoin();});
+
+// URLパラメータ ?join=XXXXXX の自動処理
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var autoCode=params.get('join');
+  if(autoCode){
+    autoCode=autoCode.toUpperCase();
+    // オンラインタブを表示
+    document.getElementById('panel-offline').style.display='none';
+    document.getElementById('panel-online').style.display='block';
+    document.getElementById('btn-mode-offline').style.background='rgba(0,0,0,.3)';
+    document.getElementById('btn-mode-offline').style.borderColor='rgba(255,255,255,.2)';
+    document.getElementById('btn-mode-offline').style.color='rgba(255,255,255,.5)';
+    document.getElementById('btn-mode-online').style.background='rgba(201,168,76,.15)';
+    document.getElementById('btn-mode-online').style.borderColor='var(--gold)';
+    document.getElementById('btn-mode-online').style.color='var(--gold-light)';
+    // コードをフォームにセット
+    document.getElementById('join-code').value=autoCode;
+    // URLをクリーンに（履歴を汚さない）
+    if(window.history&&window.history.replaceState){
+      window.history.replaceState({},'',window.location.pathname);
+    }
+  }
+})();
 function setJM(msg,type){var el=document.getElementById('join-msg');el.textContent=msg;el.className='smsg s-'+type;}
 
 function doJoin(){
