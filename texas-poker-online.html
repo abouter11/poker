@@ -1388,7 +1388,7 @@ function startRound(){
   function afterDeal(){
     var firstP=players[curIdx];
     if(isHost && firstP && firstP.isCpu && !firstP.folded && !firstP.allIn){
-      // 最初のターンがCPUの場合は直接起動
+      _cpuRunning=false; // ラウンド開始時は必ずリセット
       pushState({waitFor:firstWaitFor});
       runCpuTurn();
     } else {
@@ -1461,38 +1461,43 @@ function runCpuTurn(){
   renderAll();
   // CPU思考中はFirebaseに書かない（onStateループ防止）
   setTimeout(function(){
-    if(curIdx!==savedIdx){ _cpuRunning=false; return; }
-    var dec=cpuDecide(p,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
-    if(dec.action==='fold'){ p.folded=true; }
-    else if(dec.action==='check'){}
-    else if(dec.action==='call'){
-      var tc=Math.min(curBet-p.bet,p.chips);
-      p.chips-=tc;p.bet+=tc;p.totalBet+=tc;pot+=tc;
-      if(p.chips<=0){p.chips=0;p.allIn=true;}
-    }
-    else if(dec.action==='raise'){
-      var nb=snap5(Math.min(Math.max(dec.amount,curBet+BB),p.chips+p.bet));
-      var cost=nb-p.bet;
-      if(cost<1){p.folded=true;}
-      else{lastRaise=Math.max(nb-curBet,lastRaise);curBet=nb;p.chips-=cost;p.bet=nb;p.totalBet+=cost;pot+=cost;if(p.chips<=0){p.chips=0;p.allIn=true;}acts=[savedIdx];}
-    }
-    else if(dec.action==='allin'){
-      var allAmt=p.chips;var nb2=p.bet+allAmt;var raiseAmt2=nb2-curBet;
-      if(nb2>curBet){
-        var isFullRaise2=(raiseAmt2>=lastRaise);
-        lastRaise=Math.max(raiseAmt2,lastRaise);curBet=nb2;
-        if(isFullRaise2) acts=[savedIdx];
+    try{
+      var p2=players[savedIdx];
+      if(!p2||!p2.isCpu||p2.folded||p2.allIn){_cpuRunning=false;advance();return;}
+      var dec=cpuDecide(p2,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
+      if(dec.action==='fold'){ p2.folded=true; }
+      else if(dec.action==='check'){}
+      else if(dec.action==='call'){
+        var tc=Math.min(curBet-p2.bet,p2.chips);
+        p2.chips-=tc;p2.bet+=tc;p2.totalBet+=tc;pot+=tc;
+        if(p2.chips<=0){p2.chips=0;p2.allIn=true;}
       }
-      pot+=allAmt;p.bet=nb2;p.totalBet+=allAmt;p.chips=0;p.allIn=true;
+      else if(dec.action==='raise'){
+        var nb=snap5(Math.min(Math.max(dec.amount,curBet+BB),p2.chips+p2.bet));
+        var cost=nb-p2.bet;
+        if(cost<1){p2.folded=true;}
+        else{lastRaise=Math.max(nb-curBet,lastRaise);curBet=nb;p2.chips-=cost;p2.bet=nb;p2.totalBet+=cost;pot+=cost;if(p2.chips<=0){p2.chips=0;p2.allIn=true;}acts=[savedIdx];}
+      }
+      else if(dec.action==='allin'){
+        var allAmt=p2.chips;var nb2=p2.bet+allAmt;var raiseAmt2=nb2-curBet;
+        if(nb2>curBet){
+          var isFullRaise2=(raiseAmt2>=lastRaise);
+          lastRaise=Math.max(raiseAmt2,lastRaise);curBet=nb2;
+          if(isFullRaise2) acts=[savedIdx];
+        }
+        pot+=allAmt;p2.bet=nb2;p2.totalBet+=allAmt;p2.chips=0;p2.allIn=true;
+      }
+      if(acts.indexOf(savedIdx)<0) acts.push(savedIdx);
+      showActionBubble(savedIdx,dec.action,dec.amount||0);
+      renderAll();
+      pushState({lastAction:{playerIdx:savedIdx,action:dec.action,amount:dec.amount||0}});
+    }catch(e){
+      console.error('runCpuTurn error:',e);
+    }finally{
+      _cpuRunning=false;
     }
-    if(acts.indexOf(savedIdx)<0) acts.push(savedIdx);
-    showActionBubble(savedIdx,dec.action,dec.amount||0);
-    renderAll();
-    _cpuRunning=false;
-    // アクション完了をFirebaseに通知してから次のターンへ
-    pushState({lastAction:{playerIdx:savedIdx,action:dec.action,amount:dec.amount||0}});
     setTimeout(function(){ advance(); },300);
-  }, 800+Math.random()*600);
+  }, 800+Math.random()*400);
 }
 
 function advance(){
@@ -1519,7 +1524,12 @@ function advance(){
     nextPhase(); return;
   }
   if(isHost && curP.isCpu){
-    runCpuTurn();
+    // _cpuRunningが残っている場合は少し待って再試行
+    if(_cpuRunning){
+      setTimeout(function(){ advance(); }, 200);
+    } else {
+      runCpuTurn();
+    }
   } else {
     pushState({waitFor:curP.pid});
   }
@@ -1573,6 +1583,7 @@ function nextPhase(){
       firstP=nextAct;
     }
     if(isHost && firstP.isCpu){
+      _cpuRunning=false;
       pushState({waitFor:firstP.pid});
       runCpuTurn();
     } else {
