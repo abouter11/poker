@@ -920,6 +920,8 @@ function hideCpuBar(){document.getElementById('cpu-bar').style.display='none';}
 // ── オフライン ゲームループ ──
 function startRoundOffline(){
   _allInRevealed=false;
+  // 初回のみ initialChips を設定
+  if(!_initialChips) _initialChips = +document.getElementById('off-chips').value||500;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   players.forEach(function(p){if(p.chips<5)p.active=false;p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;});
   var active=players.filter(function(p){return p.active;});
@@ -1008,26 +1010,26 @@ function doShowdownOffline(){
   var cont=players.filter(function(p){return p.active&&!p.folded;});
   cont.forEach(function(p){p.best=evalHand(p.hole.concat(comm));});
   cont.sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
-  var top=cont[0].best.score;
-  var wins=cont.filter(function(p){return cmpSc(p.best.score,top)===0;});
-  // サイドポット分配
-  var remaining2=pot;
-  var byTotalBet2=cont.slice().sort(function(a,b){return a.totalBet-b.totalBet;});
-  var processed2={};
+  // calcSidePotsと同じロジックで分配（オンラインと統一）
+  var pots2=calcSidePots();
   var actualWins=[];
-  byTotalBet2.forEach(function(winner){
-    if(processed2[winner.idx]) return;
-    var cap2=winner.totalBet;
-    var sidePot2=0;
-    players.forEach(function(p){sidePot2+=Math.min(p.totalBet,cap2);});
-    var eligible2=cont.filter(function(p){return !processed2[p.idx];});
-    var topSc2=eligible2[0].best.score;
-    var sideWins2=eligible2.filter(function(p){return cmpSc(p.best.score,topSc2)===0;});
-    var sideShare2=snap5(Math.floor(sidePot2/sideWins2.length));
-    sideWins2.forEach(function(w){w.chips+=sideShare2;remaining2-=sideShare2;if(actualWins.indexOf(w)<0)actualWins.push(w);});
-    processed2[winner.idx]=true;
+  pots2.forEach(function(sidePot){
+    if(!sidePot.eligible||sidePot.eligible.length===0) return;
+    var ranked2=sidePot.eligible.slice().sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
+    var topSc2=ranked2[0].best.score;
+    var sideWins2=ranked2.filter(function(p){return cmpSc(p.best.score,topSc2)===0;});
+    var share2=Math.floor(sidePot.amount/sideWins2.length);
+    var rem2=sidePot.amount-(share2*sideWins2.length);
+    sideWins2.forEach(function(w){w.chips+=share2;if(actualWins.indexOf(w)<0)actualWins.push(w);});
+    if(rem2>0) sideWins2[0].chips+=rem2;
   });
-  if(remaining2>0&&cont[0]) cont[0].chips+=remaining2;
+  if(actualWins.length===0 && cont.length>0){
+    var topSc0=cont[0].best.score;
+    var fb=cont.filter(function(p){return cmpSc(p.best.score,topSc0)===0;});
+    var fs=Math.floor(pot/fb.length);var fr=pot-(fs*fb.length);
+    fb.forEach(function(w){w.chips+=fs;actualWins.push(w);});
+    if(fr>0) fb[0].chips+=fr;
+  }
   var wins=actualWins.length?actualWins:cont.slice(0,1);
   // チップ増減を計算（ショーダウン前のchipsBeforeと現在のchipsの差）
   var allActive=players.filter(function(p){return p.active;});
@@ -1376,7 +1378,7 @@ function _launch(room){
   players=arr.map(function(p,i){
     if(p.id===myId) myIdx=i;
     return{name:p.name,chips:p.chips,pid:p.id,isMe:p.id===myId,idx:i,isCpu:false,
-           hole:[],bet:0,totalBet:0,folded:false,allIn:false,active:true};
+           hole:[],bet:0,totalBet:0,folded:false,allIn:false,active:true,rebuyCount:0};
   });
   // CPUプレイヤーを追加（ホストの設定に従う）
   var cpuCnt=room.cpuCount||0;
@@ -1384,10 +1386,11 @@ function _launch(room){
   for(var ci=0;ci<cpuCnt;ci++){
     var idx=players.length;
     players.push({name:CPU_NAMES[ci],chips:arr[0]?arr[0].chips:500,pid:'cpu'+ci,isMe:false,idx:idx,isCpu:true,
-                  hole:[],bet:0,totalBet:0,folded:false,allIn:false,active:true});
+                  hole:[],bet:0,totalBet:0,folded:false,allIn:false,active:true,rebuyCount:0});
   }
   gamePath = roomPath+'/game';
   holePfx  = roomPath+'/holes/';
+  if(!_initialChips) _initialChips = arr[0]?arr[0].chips:500;
   showScreen('screen-game');
   document.getElementById('back-btn-wrap').style.display='block';
   // ホストはstateを自分で管理するのでListenしない
@@ -1822,25 +1825,33 @@ function doShowdown(){
   });
 }
 function calcSidePots(){
-  // 全プレイヤーのtotalBetからサイドポット一覧を計算
-  // 戻り値: [{amount, eligible:[playerIdx]}] のリスト
-  var allActive=players.filter(function(p){return p.active&&!p.folded;});
-  // totalBetが0のプレイヤーを除いた全プレイヤー
+  // 全プレイヤー（フォールド含む）のtotalBetからサイドポットを計算
+  // eligible = フォールドしていない（勝ちを争える）プレイヤー
   var allContrib=players.filter(function(p){return p.totalBet>0;});
+  var nonFolded=players.filter(function(p){return p.active&&!p.folded;});
   // ユニークなtotalBet値を昇順で取得
-  var caps=[...new Set(allContrib.map(function(p){return p.totalBet;}))].sort(function(a,b){return a-b;});
+  var caps=[];
+  allContrib.forEach(function(p){if(caps.indexOf(p.totalBet)<0)caps.push(p.totalBet);});
+  caps.sort(function(a,b){return a-b;});
   var pots=[];
   var prevCap=0;
   caps.forEach(function(cap){
     var potAmt=0;
+    // このレベルへの拠出額を全contributor（フォールド含む）から集める
     allContrib.forEach(function(p){
       potAmt+=Math.min(p.totalBet,cap)-Math.min(p.totalBet,prevCap);
     });
-    // このポットに参加できるのはtotalBet>=capのアクティブ非フォールドプレイヤー
-    var eligible=allActive.filter(function(p){return p.totalBet>=cap;});
-    if(potAmt>0) pots.push({amount:potAmt, eligible:eligible});
+    // eligibleはフォールドしておらず、かつこのレベル以上賭けたプレイヤー
+    var eligible=nonFolded.filter(function(p){return p.totalBet>=cap;});
+    if(potAmt>0 && eligible.length>0) pots.push({amount:potAmt, eligible:eligible});
     prevCap=cap;
   });
+  // サイドポット合計とpot変数が一致しない場合の補正
+  var potsTotal=pots.reduce(function(s,p){return s+p.amount;},0);
+  if(potsTotal<pot && pots.length>0){
+    // 差分を最後のポットに加算（端数処理）
+    pots[pots.length-1].amount+=pot-potsTotal;
+  }
   return pots;
 }
 
@@ -1850,18 +1861,37 @@ function finishSD(cont,holes){
   // サイドポット計算
   var pots=calcSidePots();
   var allWinners=[];
+  // 分配前に各プレイヤーのchipsを確認（二重加算防止）
+  var chipsAdded={};
+  players.forEach(function(p){chipsAdded[p.idx]=0;});
   pots.forEach(function(sidePot){
-    // このポットの参加者の中から最強ハンドを持つプレイヤーへ分配
-    var eligible=sidePot.eligible.slice().sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
-    var topSc=eligible[0].best.score;
-    var winners=eligible.filter(function(p){return cmpSc(p.best.score,topSc)===0;});
+    if(!sidePot.eligible||sidePot.eligible.length===0) return;
+    // eligible の中でbestを持つプレイヤーを特定
+    var ranked=sidePot.eligible.slice().sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
+    var topSc=ranked[0].best.score;
+    var winners=ranked.filter(function(p){return cmpSc(p.best.score,topSc)===0;});
+    // このポットを winners で山分け
     var share=Math.floor(sidePot.amount/winners.length);
     var remainder=sidePot.amount-(share*winners.length);
-    winners.forEach(function(w){w.chips+=share;if(allWinners.indexOf(w)<0)allWinners.push(w);});
-    // 端数は最初の勝者へ
-    if(remainder>0) winners[0].chips+=remainder;
+    winners.forEach(function(w){
+      w.chips+=share;
+      chipsAdded[w.idx]+=share;
+      if(allWinners.indexOf(w)<0) allWinners.push(w);
+    });
+    if(remainder>0){
+      winners[0].chips+=remainder;
+      chipsAdded[winners[0].idx]+=remainder;
+    }
   });
-  if(allWinners.length===0) allWinners=cont.slice(0,1);
+  if(allWinners.length===0 && cont.length>0){
+    // フォールバック: potsが空の場合はpot全額を最強ハンドへ
+    var topSc2=cont[0].best.score;
+    var fallbackWinners=cont.filter(function(p){return cmpSc(p.best.score,topSc2)===0;});
+    var fShare=Math.floor(pot/fallbackWinners.length);
+    var fRem=pot-(fShare*fallbackWinners.length);
+    fallbackWinners.forEach(function(w){w.chips+=fShare;allWinners.push(w);});
+    if(fRem>0) fallbackWinners[0].chips+=fRem;
+  }
   var wins=allWinners;
   // 同役の場合の勝因を特定（勝者 vs 最強の敗者）
   var bestLoser=cont.find(function(p){return wins.indexOf(p)<0;});
@@ -2029,7 +2059,10 @@ function renderAll(){
     } else {
       stHtml='<div class="sst"></div>';
     }
-    s.innerHTML='<div class="sname">'+p.name+(p.isMe?' ⭐':'')+'</div>'+
+    var rebuyBadge = (p.rebuyCount&&p.rebuyCount>0)
+      ? '<span style="font-size:8px;background:rgba(255,140,0,.25);border:1px solid rgba(255,140,0,.5);border-radius:4px;padding:1px 4px;color:#fa0;margin-left:4px;vertical-align:middle;">×'+(p.rebuyCount+1)+'</span>'
+      : '';
+    s.innerHTML='<div class="sname">'+p.name+(p.isMe?' ⭐':'')+rebuyBadge+'</div>'+
       '<div class="schips">'+chipsHTML(p.chips)+'</div>'+
       '<div class="sbet">'+(p.bet?'<span style="font-size:9px">BET </span>'+chipsHTML(p.bet):'')+'</div>'+
       '<div class="scards">'+ch+'</div>'+
@@ -2081,26 +2114,108 @@ function showDealOverlay(hole, cb){
   }, 1800);
 }
 
+// ── リバイ処理 ──
+// 初回チップ量（ラウンド開始時に設定された量）を記録
+var _initialChips = 0;
+
+function doRebuy(p){
+  p.rebuyCount = (p.rebuyCount||0) + 1;
+  p.chips = _initialChips;
+  p.active = true;
+  p.eliminated = false;
+}
+
 // ── Eliminated チェック（ラウンド後） ──
 function checkEliminated(afterRoundCb){
   var eliminated = players.filter(function(p){ return p.active && p.chips < BB; });
   if(eliminated.length === 0){ afterRoundCb(); return; }
 
-  // 脱落アニメーション表示してから
-  var msg = eliminated.map(function(p){ return p.name; }).join(', ') + ' が脱落！';
-  eliminated.forEach(function(p){ p.active = false; p.eliminated = true; });
+  // CPUは自動リバイ
+  eliminated.forEach(function(p){
+    if(p.isCpu){ doRebuy(p); }
+  });
 
-  var meElim = eliminated.some(function(p){ return p.isMe; });
-  if(meElim && offlineMode){
-    renderAll();
-    showMsg('ELIMINATED', 'チップが不足しました。<br>あなたは脱落しました。', 'ロビーへ', function(){
-      document.getElementById('back-btn-wrap').style.display='none'; showScreen('screen-lobby'); offlineMode = false;
-    }, '');
-    return;
+  var humanElim = eliminated.filter(function(p){ return !p.isCpu; });
+  if(humanElim.length === 0){ renderAll(); afterRoundCb(); return; }
+
+  // 人間プレイヤーのリバイ処理（1人ずつ順番に）
+  var idx = 0;
+  function processNext(){
+    if(idx >= humanElim.length){ renderAll(); afterRoundCb(); return; }
+    var p = humanElim[idx++];
+    var rebuyNum = (p.rebuyCount||0) + 1;
+    var label = rebuyNum === 1 ? '初回購入' : '追加購入 ' + rebuyNum + '回目';
+    var activeHumans = players.filter(function(q){ return q.active && !q.isCpu && q.idx !== p.idx; });
+    var canContinue = activeHumans.length > 0 || players.filter(function(q){ return q.active; }).length > 1;
+
+    // リバイ確認モーダル
+    var mover = document.getElementById('mover');
+    var mtitle = document.getElementById('mtitle');
+    var mbody = document.getElementById('mbody');
+    var mcards = document.getElementById('mcards');
+    var mcomm = document.getElementById('mcomm');
+    var mnext = document.getElementById('mnext');
+    mover.classList.add('show');
+    mtitle.textContent = '💀 チップ不足';
+    mcards.innerHTML = '';
+    mcomm.style.display = 'none';
+    // リバイボタンを含むHTML
+    var purchaseHistory = '';
+    if((p.rebuyCount||0) > 0){
+      purchaseHistory = '<div style="font-size:10px;color:rgba(255,200,100,.7);margin-top:6px;">これまでの購入: 初回 + ' + p.rebuyCount + '回</div>';
+    }
+    mbody.innerHTML = '<b style="color:var(--gold-light);">' + p.name + '</b> のチップが不足しました。<br>' +
+      '<span style="font-size:11px;color:rgba(255,255,255,.6);">' + label + ' として ' + _initialChips + ' チップを追加しますか？</span>' +
+      purchaseHistory;
+    // 2ボタン: リバイ or 脱落
+    mnext.style.display = 'none';
+    var btnWrap = document.getElementById('rebuy-btn-wrap');
+    if(!btnWrap){
+      btnWrap = document.createElement('div');
+      btnWrap.id = 'rebuy-btn-wrap';
+      btnWrap.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:8px;';
+      mnext.parentNode.insertBefore(btnWrap, mnext);
+    }
+    btnWrap.innerHTML = '';
+    // リバイボタン
+    var btnRebuy = document.createElement('button');
+    btnRebuy.className = 'mnext';
+    btnRebuy.style.background = 'linear-gradient(135deg,#1a6a1a,#2ea02e)';
+    btnRebuy.textContent = '✅ チップ購入 (' + _initialChips + ')';
+    btnRebuy.onclick = function(){
+      doRebuy(p);
+      btnWrap.innerHTML = '';
+      mnext.style.display = '';
+      mover.classList.remove('show');
+      processNext();
+    };
+    // 脱落ボタン
+    var btnElim = document.createElement('button');
+    btnElim.className = 'mnext';
+    btnElim.style.background = 'linear-gradient(135deg,#6a1a1a,#a02e2e)';
+    btnElim.textContent = '❌ 脱落する';
+    btnElim.onclick = function(){
+      p.active = false; p.eliminated = true;
+      btnWrap.innerHTML = '';
+      mnext.style.display = '';
+      mover.classList.remove('show');
+      // 続行可能か確認
+      var stillActive = players.filter(function(q){ return q.active; });
+      if(stillActive.length < 2){
+        var winner = stillActive[0];
+        var winMsg = winner ? '<span class="wn">'+winner.name+'</span>の優勝！' : 'ゲーム終了';
+        showMsg('ゲーム終了', winMsg, 'ロビーへ', function(){
+          document.getElementById('back-btn-wrap').style.display='none';
+          showScreen('screen-lobby'); offlineMode=false;
+        }, '');
+        return;
+      }
+      processNext();
+    };
+    btnWrap.appendChild(btnRebuy);
+    btnWrap.appendChild(btnElim);
   }
-  renderAll();
-  // 他のプレイヤーのみ脱落の場合は続行
-  afterRoundCb();
+  processNext();
 }
 
 // ── アクションバブル表示 ──
@@ -2169,7 +2284,7 @@ window._pokerGoLobby = function(){
   // 状態リセット
   gamePath=''; holePfx=''; roomPath=''; isHost=false;
   offlineMode=false;
-  players=[]; myHole=[];
+  players=[]; myHole=[]; _initialChips=0;
   showScreen('screen-lobby');
 };
 
