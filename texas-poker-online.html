@@ -1628,6 +1628,7 @@ function processCpuQueue(){
   setTimeout(function(){
     var p2=players[cpuIdx];
     if(!p2||p2.folded||p2.allIn){
+      hideInfo();
       _cpuBusy=false;
       setTimeout(function(){advance();},0);
       return;
@@ -1680,8 +1681,7 @@ function advance(){
   var allActed=ca.every(function(p){return acts.indexOf(p.idx)>=0;});
   var allBetsEqual=ca.every(function(p){return p.bet>=curBet;});
   if(ca.length===0 || (allActed && allBetsEqual)){
-    // 全員オールイン or アクション完了 → nextPhase
-    // ただし全員オールインなら残りのフェーズを一気に開く
+    hideInfo();
     if(ca.length===0){
       rundownAllIn();
     } else {
@@ -1693,7 +1693,7 @@ function advance(){
   var curP=players[curIdx];
   // nxt()がallInプレイヤーを返してしまう場合の安全策
   if(!curP || curP.allIn || curP.folded){
-    // アクション可能なプレイヤーがいないはずなのでnextPhaseへ
+    hideInfo();
     nextPhase(); return;
   }
   if(isHost && curP.isCpu){
@@ -1706,6 +1706,7 @@ function advance(){
 
 // 全員オールイン時: フロップ→ターン→リバーを順番に演出付きで公開してショーダウン
 function rundownAllIn(){
+  hideInfo(); // CPU「考えています」等を消す
   // ALL IN参加者のホールカードを全員に公開
   var revealMap={};
   players.forEach(function(p){
@@ -1764,6 +1765,7 @@ function rundownAllIn(){
 }
 
 function nextPhase(){
+  hideInfo(); // フェーズ移行時にステータス表示をクリア
   players.forEach(function(p){p.bet=0;}); curBet=0; lastRaise=BB; acts=[]; phase++;
   var newCards=[];
   if(phase===1){var c1=deck.pop(),c2=deck.pop(),c3=deck.pop();comm.push(c1,c2,c3);newCards=[c1,c2,c3];}
