@@ -1498,6 +1498,7 @@ function onState(st){
     if(!players[i])return;
     players[i].chips=sp.chips;players[i].bet=sp.bet;players[i].totalBet=sp.totalBet;
     players[i].folded=sp.folded;players[i].allIn=sp.allIn;players[i].active=sp.active;
+    if(sp.rebuyCount!==undefined) players[i].rebuyCount=sp.rebuyCount;
   });
   if(myHole.length===2&&players[myIdx]) players[myIdx].hole=myHole;
   if(st.reveal){
@@ -1550,7 +1551,7 @@ function watchAction(){
 
 function pushState(extra){
   var st={
-    players:players.map(function(p){return{chips:p.chips,bet:p.bet,totalBet:p.totalBet,folded:p.folded,allIn:p.allIn,active:p.active};}),
+    players:players.map(function(p){return{chips:p.chips,bet:p.bet,totalBet:p.totalBet,folded:p.folded,allIn:p.allIn,active:p.active,rebuyCount:p.rebuyCount||0};}),
     comm:comm,pot:pot,phase:phase,curIdx:curIdx,curBet:curBet,
     dealerIdx:dealerIdx,lastRaise:lastRaise,acts:acts,
     showdown:null,result:null,reveal:null,waitFor:null
@@ -1781,9 +1782,105 @@ function advance(){
   }
 }
 
+
+// ── ALL IN 手札公開演出 ──
+function _showAllInReveal(revealMap, cb){
+  var participants = players.filter(function(p){
+    return p.active && !p.folded && revealMap[p.idx];
+  });
+  if(participants.length === 0){ cb(); return; }
+
+  // オーバーレイDOM生成
+  var ov = document.getElementById('allin-reveal-overlay');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id = 'allin-reveal-overlay';
+    ov.style.cssText = [
+      'position:fixed;inset:0;z-index:1200',
+      'background:rgba(0,0,0,.82)',
+      'display:flex;flex-direction:column',
+      'align-items:center;justify-content:center',
+      'gap:18px;padding:24px 16px',
+      'opacity:0;transition:opacity .3s'
+    ].join(';');
+    document.body.appendChild(ov);
+  }
+
+  // タイトル
+  ov.innerHTML = '<div style="font-family:Cinzel,serif;font-size:15px;letter-spacing:3px;color:var(--gold-light);text-shadow:0 0 12px rgba(201,168,76,.6);">🃏 ALL IN — HOLE CARDS</div>';
+
+  // 各プレイヤーのカード行（最初は裏向き）
+  var rows = [];
+  participants.forEach(function(p){
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;max-width:320px;background:rgba(255,255,255,.05);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:10px 14px;';
+    // 名前
+    var nameEl = document.createElement('div');
+    nameEl.style.cssText = 'font-family:Cinzel,serif;font-size:12px;color:rgba(255,255,255,.85);min-width:80px;flex:1;';
+    nameEl.textContent = p.name + (p.isMe ? ' ⭐' : '');
+    row.appendChild(nameEl);
+    // カード2枚（裏向きで初期化）
+    var cardEls = [];
+    var hole = revealMap[p.idx];
+    for(var ci=0; ci<2; ci++){
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'perspective:600px;';
+      var inner = document.createElement('div');
+      inner.style.cssText = [
+        'width:44px;height:64px',
+        'position:relative;transform-style:preserve-3d',
+        'transition:transform .45s ease',
+        'transform:rotateY(0deg)'
+      ].join(';');
+      // 裏面
+      var back = document.createElement('div');
+      back.style.cssText = 'position:absolute;inset:0;backface-visibility:hidden;';
+      back.innerHTML = cH(null, true);
+      // 表面
+      var front = document.createElement('div');
+      front.style.cssText = 'position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);';
+      front.innerHTML = cH(hole[ci], true);
+      inner.appendChild(back);
+      inner.appendChild(front);
+      wrap.appendChild(inner);
+      row.appendChild(wrap);
+      cardEls.push(inner);
+    }
+    ov.appendChild(row);
+    rows.push({p:p, cardEls:cardEls});
+  });
+
+  // フェードイン
+  ov.style.opacity='0';
+  ov.style.display='flex';
+  setTimeout(function(){ ov.style.opacity='1'; }, 30);
+
+  // カードを順番にフリップ（プレイヤーごとに150ms間隔、カード間200ms）
+  var totalDelay = 400; // 初期待機
+  rows.forEach(function(r){
+    r.cardEls.forEach(function(el, ci){
+      (function(flipEl, delay){
+        setTimeout(function(){ flipEl.style.transform='rotateY(180deg)'; }, delay);
+      })(el, totalDelay + ci*220);
+    });
+    totalDelay += 220*2 + 200; // 2枚フリップ後 200ms 待機
+  });
+
+  // 全フリップ完了後に 1.2秒 見せてからフェードアウト
+  var showDuration = totalDelay + 1200;
+  setTimeout(function(){
+    ov.style.opacity='0';
+    setTimeout(function(){
+      ov.style.display='none';
+      ov.innerHTML='';
+      cb();
+    }, 350);
+  }, showDuration);
+}
+
 // 全員オールイン時: フロップ→ターン→リバーを順番に演出付きで公開してショーダウン
 function rundownAllIn(){
-  hideInfo(); // CPU「考えています」等を消す
+  hideInfo();
   // ALL IN参加者のホールカードを全員に公開
   var revealMap={};
   players.forEach(function(p){
@@ -1792,15 +1889,26 @@ function rundownAllIn(){
     }
   });
   if(gamePath){
-    // オンライン: pushStateのrevealで非ホストに伝達
     pushState({reveal:revealMap, waitFor:null});
   }
-  // ローカルも即座に反映（自分の画面）
   _allInRevealed=true;
   Object.keys(revealMap).forEach(function(i){
     if(players[i]) players[i].hole=revealMap[i];
   });
   renderAll();
+
+  // ── 手札公開演出 ──
+  _showAllInReveal(revealMap, function(){
+    // 演出終了後にコミュニティカードを公開していく
+    startRevealSteps();
+  });
+
+  function startRevealSteps(){
+    revealStep(function(){
+      renderAll();
+      doShowdown();
+    });
+  }
 
   function revealStep(cb){
     if(comm.length>=5){ cb(); return; }
@@ -1835,10 +1943,6 @@ function rundownAllIn(){
       setTimeout(function(){ revealStep(cb); }, 1500);
     });
   }
-  revealStep(function(){
-    renderAll();
-    doShowdown();
-  });
 }
 
 function nextPhase(){
@@ -2102,7 +2206,9 @@ function renderAll(){
     }
     if(!p.active)return;
     var s=document.createElement('div');s.className='seat';
-    if(i===curIdx) s.classList.add(p.isMe?'myturn':'waiting');
+    // apVisible時は自分シートをmyturnに（curIdx不問）
+    if(apVisible && p.isMe){ s.classList.add('myturn'); }
+    else if(i===curIdx && !apVisible){ s.classList.add(p.isMe?'myturn':'waiting'); }
     if(p.folded) s.classList.add('folded');
     if(i===dealerIdx) s.classList.add('dealer');
     // カード表示ロジック:
@@ -2116,14 +2222,21 @@ function renderAll(){
     var show=h&&h.length===2;
     var ch=show?(cH(h[0],true)+cH(h[1],true)):(cH(null,true)+cH(null,true));
     // アクション状態表示
+    // アクションパネルが表示中 = 自分のターン確定
+    var apVisible = document.getElementById('ap').style.display !== 'none';
     var stHtml='';
     if(p.folded){
       stHtml='<div class="sst">FOLD</div>';
     } else if(p.allIn){
       s.classList.add('allin');
       stHtml='<div class="sst-allin">🔴 ALL IN</div>';
-    } else if(i===curIdx){
-      // ibarが表示中（CPU思考中）でも自分のターンなら優先表示しない
+    } else if(p.isMe && apVisible){
+      // アクションパネル表示中は自分のターン確定
+      s.classList.remove('waiting');
+      s.classList.add('myturn');
+      stHtml='<div class="sst" style="color:var(--gold-light);font-weight:700;">▶ あなたのターン</div>';
+    } else if(i===curIdx && !apVisible){
+      // アクションパネル非表示時のみcurIdxを参照
       if(p.isMe) stHtml='<div class="sst" style="color:var(--gold-light);font-weight:700;">▶ あなたのターン</div>';
       else if(p.isCpu) stHtml='<div class="sst">考え中...</div>';
       else stHtml='<div class="sst">アクション中...</div>';
