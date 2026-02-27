@@ -329,6 +329,7 @@ letter-spacing:6px;margin-bottom:6px;}
 <div id="mover">
   <div class="mcard">
     <div class="mtitle" id="mtitle"></div>
+    <div id="mcomm" style="display:none;flex-wrap:wrap;gap:3px;justify-content:center;margin:6px 0;"></div>
     <div class="mcards" id="mcards"></div>
     <div class="mbody" id="mbody"></div>
     <button class="mnext" id="mnext">次のラウンド</button>
@@ -875,6 +876,8 @@ function startRoundOffline(){
   while(!players[dealerIdx].active)dealerIdx=(dealerIdx+1)%players.length;
   var myPlayer=null;
   active.forEach(function(p){p.hole=[deck.pop(),deck.pop()];if(p.isMe){myHole=p.hole;myPlayer=p;}});
+  // ラウンド開始時のチップを保存
+  players.forEach(function(p){ p.chipsBefore=p.chips; });
   var sb=nxt(dealerIdx),bb=nxt(sb);
   blind(players[sb],SB);blind(players[bb],BB);
   curBet=BB;lastRaise=BB;curIdx=nxt(bb);acts=[players[sb].idx];
@@ -946,8 +949,6 @@ function nextPhaseOffline(){
 }
 
 function doShowdownOffline(){
-  // チップ増減計算用に現在のチップ数を保存
-  players.forEach(function(p){ p.chipsBefore=p.chips; });
   var cont=players.filter(function(p){return p.active&&!p.folded;});
   cont.forEach(function(p){p.best=evalHand(p.hole.concat(comm));});
   cont.sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
@@ -1396,6 +1397,8 @@ function startRound(){
     if(!p.isCpu) fbSet(holePfx+p.pid, h);
     if(p.isMe) myHole=h;
   });
+  // ラウンド開始時のチップを保存（ショーダウンの増減表示用）
+  players.forEach(function(p){ p.chipsBefore=p.chips; });
   var sb=nxt(dealerIdx), bb=nxt(sb);
   blind(players[sb],SB); blind(players[bb],BB);
   curBet=BB; lastRaise=BB; curIdx=nxt(bb); acts=[players[sb].idx];
@@ -1660,8 +1663,6 @@ function calcSidePots(){
 }
 
 function finishSD(cont,holes){
-  // チップ増減計算用に現在のチップ数を保存（分配前）
-  players.forEach(function(p){ p.chipsBefore=p.chips; });
   cont.forEach(function(p){if(holes[p.idx])p.hole=holes[p.idx];p.best=evalHand(p.hole.concat(comm));});
   cont.sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
   // サイドポット計算
