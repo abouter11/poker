@@ -1478,16 +1478,48 @@ function advance(){
   var nf=players.filter(function(p){return p.active&&!p.folded;});
   if(nf.length===1){nf[0].chips+=pot;pushState({result:{title:'ラウンド終了',body:'<span class="wn">'+nf[0].name+'</span>の勝利！（全員フォールド）',ch:''},waitFor:null});return;}
   var ca=players.filter(function(p){return p.active&&!p.folded&&!p.allIn;});
-  // 全員アクション済み かつ ベット額が揃っている（またはオールイン済み）
   var allActed=ca.every(function(p){return acts.indexOf(p.idx)>=0;});
   var allBetsEqual=ca.every(function(p){return p.bet>=curBet;});
-  if(ca.length===0 || (allActed && allBetsEqual)){nextPhase();return;}
+  if(ca.length===0 || (allActed && allBetsEqual)){
+    // 全員オールイン or アクション完了 → nextPhase
+    // ただし全員オールインなら残りのフェーズを一気に開く
+    if(ca.length===0){
+      rundownAllIn();
+    } else {
+      nextPhase();
+    }
+    return;
+  }
   curIdx=nxt(curIdx);
   var curP=players[curIdx];
-  if(isHost && curP && curP.isCpu && !curP.folded && !curP.allIn){
+  // nxt()がallInプレイヤーを返してしまう場合の安全策
+  if(!curP || curP.allIn || curP.folded){
+    // アクション可能なプレイヤーがいないはずなのでnextPhaseへ
+    nextPhase(); return;
+  }
+  if(isHost && curP.isCpu){
     runCpuTurn();
   } else {
-    pushState({waitFor:curP?curP.pid:null});
+    pushState({waitFor:curP.pid});
+  }
+}
+
+// 全員オールイン時: 残りのコミュニティカードを一気に公開してショーダウン
+function rundownAllIn(){
+  // 残りのカードを全て公開
+  var newCards=[];
+  while(comm.length<5){
+    var c=deck.pop(); comm.push(c); newCards.push(c);
+  }
+  renderAll();
+  if(newCards.length>0){
+    // フェーズ名を最終フェーズに合わせて表示
+    var phaseName=comm.length>=5?'SHOWDOWN':'';
+    showPhaseOverlay(phaseName, newCards, function(){
+      doShowdown();
+    });
+  } else {
+    doShowdown();
   }
 }
 
@@ -1498,15 +1530,31 @@ function nextPhase(){
   else if(phase===2){var c=deck.pop();comm.push(c);newCards=[c];}
   else if(phase===3){var c=deck.pop();comm.push(c);newCards=[c];}
   else if(phase>=4){ doShowdown(); return; }
+  // このフェーズでアクション可能なプレイヤーがいるか確認
+  var ca=players.filter(function(p){return p.active&&!p.folded&&!p.allIn;});
+  if(ca.length===0){
+    // 全員オールイン → 残りを一気に公開
+    renderAll();
+    showPhaseOverlay(PNAMES[phase]||'', newCards, function(){
+      rundownAllIn();
+    });
+    return;
+  }
   curIdx=nxt(dealerIdx);
   renderAll();
   showPhaseOverlay(PNAMES[phase]||'', newCards, function(){
     var firstP=players[curIdx];
-    if(isHost && firstP && firstP.isCpu && !firstP.folded && !firstP.allIn){
-      // CPU先頭: runCpuTurn で直接処理
+    if(!firstP || firstP.allIn || firstP.folded){
+      // 安全策: アクション可能プレイヤーを探す
+      var nextAct=players.find(function(p){return p.active&&!p.folded&&!p.allIn;});
+      if(!nextAct){rundownAllIn();return;}
+      curIdx=nextAct.idx;
+      firstP=nextAct;
+    }
+    if(isHost && firstP.isCpu){
       runCpuTurn();
     } else {
-      pushState({waitFor:firstP?firstP.pid:null});
+      pushState({waitFor:firstP.pid});
     }
   });
 }
