@@ -498,15 +498,39 @@ var HN=['ハイカード','ワンペア','ツーペア','スリーカード','�
 var RN_MAP={2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A'};
 function handDetail(score){
   var h=score.hi; var r=score.rank;
-  if(r===8||r===4) return RN_MAP[h[0]]+'ハイ';
-  if(r===7) return RN_MAP[h[0]]+'×4 ('+RN_MAP[h[1]]+'キック)';
-  if(r===6) return RN_MAP[h[0]]+'フル '+RN_MAP[h[1]];
-  if(r===5) return RN_MAP[h[0]]+'ハイ';
-  if(r===3) return RN_MAP[h[0]]+'×3 ('+RN_MAP[h[1]]+','+RN_MAP[h[2]]+'キック)';
-  if(r===2) return RN_MAP[h[0]]+' & '+RN_MAP[h[1]]+' ('+RN_MAP[h[2]]+'キック)';
-  if(r===1) return RN_MAP[h[0]]+'ペア ('+RN_MAP[h[1]]+','+RN_MAP[h[2]]+','+RN_MAP[h[3]]+'キック)';
-  if(r===0) return RN_MAP[h[0]]+'ハイ';
+  if(r===8) return RN_MAP[h[0]]+'ハイ ストレートフラッシュ';
+  if(r===7) return RN_MAP[h[0]]+'のフォーカード (キッカー:'+RN_MAP[h[1]]+')';
+  if(r===6) return RN_MAP[h[0]]+' FULL of '+RN_MAP[h[1]];
+  if(r===5) return RN_MAP[h[0]]+'ハイ フラッシュ';
+  if(r===4) return RN_MAP[h[0]]+'ハイ ストレート';
+  if(r===3) return RN_MAP[h[0]]+'のスリーカード (キッカー:'+RN_MAP[h[1]]+','+RN_MAP[h[2]]+')';
+  if(r===2) return RN_MAP[h[0]]+'と'+RN_MAP[h[1]]+'のツーペア (キッカー:'+RN_MAP[h[2]]+')';
+  if(r===1) return RN_MAP[h[0]]+'のワンペア (キッカー:'+RN_MAP[h[1]]+'>'+RN_MAP[h[2]]+'>'+RN_MAP[h[3]]+')';
+  if(r===0) return RN_MAP[h[0]]+'>'+RN_MAP[h[1]]+'>'+RN_MAP[h[2]]+'>'+RN_MAP[h[3]]+'>'+RN_MAP[h[4]];
   return '';
+}
+// 2プレイヤー間でなぜ勝ったかの理由を返す
+function winReason(winner, loser){
+  if(!winner||!loser||!winner.best||!loser.best) return '';
+  var ws=winner.best.score, ls=loser.best.score;
+  if(ws.rank!==ls.rank) return ''; // 役が違う場合は役名で明確
+  var h1=ws.hi, h2=ls.hi, r=ws.rank;
+  // 同じ役内でどのhi要素で勝ったか
+  for(var i=0;i<h1.length;i++){
+    if((h1[i]||0)!==(h2[i]||0)){
+      if(r===1 && i===0) return RN_MAP[h1[0]]+'ペアで勝利';
+      if(r===1 && i>0)   return 'キッカー '+RN_MAP[h1[i]]+' > '+RN_MAP[h2[i]]+' で勝利';
+      if(r===2 && i===0) return '上ペア '+RN_MAP[h1[0]]+' > '+RN_MAP[h2[0]]+' で勝利';
+      if(r===2 && i===1) return '下ペア '+RN_MAP[h1[1]]+' > '+RN_MAP[h2[1]]+' で勝利';
+      if(r===2 && i===2) return 'キッカー '+RN_MAP[h1[2]]+' > '+RN_MAP[h2[2]]+' で勝利';
+      if(r===0)          return 'ハイカード '+RN_MAP[h1[i]]+' > '+RN_MAP[h2[i]]+' で勝利';
+      if(r===3 && i===0) return RN_MAP[h1[0]]+'のスリーカードで勝利';
+      if(r===3 && i>0)   return 'キッカー '+RN_MAP[h1[i]]+' > '+RN_MAP[h2[i]]+' で勝利';
+      if(r===5)          return 'フラッシュ '+RN_MAP[h1[i]]+' > '+RN_MAP[h2[i]]+' で勝利';
+      return RN_MAP[h1[i]]+' > '+RN_MAP[h2[i]]+' で勝利';
+    }
+  }
+  return '引き分け';
 }
 function makeDeck(){var d=[];SUITS.forEach(function(s){RANKS.forEach(function(r){d.push({r:r,s:s});});});return d;}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
@@ -999,11 +1023,12 @@ function doShowdownOffline(){
     var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
     ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
     ch+='<div style="flex:1;min-width:0;">';
-    var statusTxt2=isElim2?'💀 ELIMINATED':inCont?HN[p.best.score.rank]+' ('+handDetail(p.best.score)+')':'FOLD';
+    var detailTxt2=inCont?handDetail(p.best.score):'';
+    var statusTxt2=isElim2?'💀 ELIMINATED':inCont?HN[p.best.score.rank]:'FOLD';
     var prefix2=isW?'🏆 ':isElim2?'':inCont?'':'❌ ';
-    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';">'+prefix2+p.name+'</div>';
-    ch+='<div style="font-size:9px;color:rgba(255,255,255,.5);">'+statusTxt2+'</div>';
-    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+gainStr+' → '+p.chips+'chips</div>';
+    ch+='<div style="font-family:Cinzel,serif;font-size:11px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.8)':'rgba(255,100,100,.7)')+';">'+prefix2+p.name+'</div>';
+    ch+='<div style="font-size:9px;color:'+(isW?'#afc':'rgba(255,255,255,.45)')+';">'+statusTxt2+(detailTxt2?' ／ '+detailTxt2:'')+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+gainStr+' (残'+p.chips+')</div>';
     ch+='</div>';
     if(inCont&&p.hole&&p.hole.length){
       ch+='<div style="display:flex;gap:2px;flex-shrink:0;">';
@@ -1013,8 +1038,14 @@ function doShowdownOffline(){
     ch+='</div>';
   });
   ch+='</div>';
+  var bestLoser2=cont.find(function(p){return wins.indexOf(p)<0;});
+  var reasonStr2=wins.length===1&&bestLoser2?winReason(wins[0],bestLoser2):'';
   var winDetail2=handDetail(wins[0].best.score);
-  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+' ('+winDetail2+')</span>';
+  var bodyLines2=['<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！'];
+  bodyLines2.push('<span class="hn">'+HN[wins[0].best.score.rank]+'</span>');
+  bodyLines2.push('<span style="font-size:10px;color:rgba(255,220,100,.9);">'+winDetail2+'</span>');
+  if(reasonStr2) bodyLines2.push('<span style="font-size:10px;color:rgba(180,255,180,.85);">▶ '+reasonStr2+'</span>');
+  var body=bodyLines2.join('<br>');
   renderAll();showMsg('ショーダウン',body,'次のラウンド',function(){checkEliminated(function(){startRoundOffline();});},ch,comm);
 }
 
@@ -1730,6 +1761,9 @@ function finishSD(cont,holes){
   });
   if(allWinners.length===0) allWinners=cont.slice(0,1);
   var wins=allWinners;
+  // 同役の場合の勝因を特定（勝者 vs 最強の敗者）
+  var bestLoser=cont.find(function(p){return wins.indexOf(p)<0;});
+  var reasonStr=wins.length===1&&bestLoser?winReason(wins[0],bestLoser):'';
   // 全プレイヤー（フォールド含む）表示
   var allActiveOnline=players.filter(function(p){return p.active;});
   var ch='<div style="width:100%;">';
@@ -1743,11 +1777,12 @@ function finishSD(cont,holes){
     ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
     ch+='<div style="flex:1;min-width:0;">';
     var isElim=p.eliminated||(!p.active&&!inCont);
-    var statusTxt=isElim?'💀 ELIMINATED':inCont?HN[p.best.score.rank]+' ('+handDetail(p.best.score)+')':'FOLD';
+    var detailTxt=inCont?handDetail(p.best.score):'';
+    var statusTxt=isElim?'💀 ELIMINATED':inCont?HN[p.best.score.rank]:'FOLD';
     var prefix=isW?'🏆 ':isElim?'':inCont?'':'❌ ';
-    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';">'+prefix+p.name+'</div>';
-    ch+='<div style="font-size:9px;color:rgba(255,255,255,.5);">'+statusTxt+'</div>';
-    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+gainStr+' → '+p.chips+'chips</div>';
+    ch+='<div style="font-family:Cinzel,serif;font-size:11px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.8)':'rgba(255,100,100,.7)')+';">'+prefix+p.name+'</div>';
+    ch+='<div style="font-size:9px;color:'+(isW?'#afc':'rgba(255,255,255,.45)')+';">'+statusTxt+(detailTxt?' ／ '+detailTxt:'')+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+gainStr+' (残'+p.chips+')</div>';
     ch+='</div>';
     if(inCont&&p.hole&&p.hole.length){
       ch+='<div style="display:flex;gap:2px;flex-shrink:0;">';
@@ -1758,7 +1793,11 @@ function finishSD(cont,holes){
   });
   ch+='</div>';
   var winDetail=handDetail(wins[0].best.score);
-  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+' ('+winDetail+')</span>';
+  var bodyLines=['<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！'];
+  bodyLines.push('<span class="hn">'+HN[wins[0].best.score.rank]+'</span>');
+  bodyLines.push('<span style="font-size:10px;color:rgba(255,220,100,.9);">'+winDetail+'</span>');
+  if(reasonStr) bodyLines.push('<span style="font-size:10px;color:rgba(180,255,180,.85);">▶ '+reasonStr+'</span>');
+  var body=bodyLines.join('<br>');
   pushState({showdown:{body:body,ch:ch,comm:comm},reveal:holes,waitFor:null});
 }
 
