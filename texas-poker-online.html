@@ -802,20 +802,20 @@ document.getElementById('btn-mode-online').onclick = function(){
   var done = false;
   function fail(){
     if(done) return; done = true;
-    el.textContent = '⚠ オフラインモード'; el.className = 'badge b-err';
-    alert('オンライン接続できません。\nGitHub Pages (https://hk0930.github.io/poker/) でアクセスしてください。');
+    el.textContent = '⚠ 接続確認中...'; el.className = 'badge b-warn';
+    // アラートは出さず、実際の接続試行時にエラーが出る
   }
   function ok(){
     if(done) return; done = true;
     el.textContent = '✓ オンライン接続中'; el.className = 'badge b-ok';
     setMode('online');
   }
-  var t = setTimeout(fail, 5000);
+  var t = setTimeout(fail, 8000);
   try {
     var xhr = new XMLHttpRequest();
     xhr.open('PUT', fbUrl('ping'), true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.timeout = 5000;
+    xhr.timeout = 8000;
     xhr.onload = function(){ clearTimeout(t); if(xhr.status>=200&&xhr.status<300) ok(); else fail(); };
     xhr.onerror = function(){ clearTimeout(t); fail(); };
     xhr.ontimeout = function(){ clearTimeout(t); fail(); };
@@ -1134,7 +1134,8 @@ function genCode(){var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<6
 
 document.getElementById('btn-create').addEventListener('click', function(){
   if(document.getElementById('conn-badge').className.includes('b-err')){
-    alert('オンライン接続できません。オフラインモードをお使いください。');return;
+    // 接続テスト失敗でも試みる（コメントアウト）
+    // alert('オンライン接続できません。オフラインモードをお使いください。');return;
   }
   myName = document.getElementById('my-name').value.trim()||'プレイヤー1';
   myChips = +document.getElementById('my-chips').value||1000;
@@ -1298,36 +1299,29 @@ document.getElementById('join-code').addEventListener('keydown', function(e){if(
   var autoCode=params.get('join');
   if(autoCode){
     autoCode=autoCode.toUpperCase();
-    // オンラインタブを表示
-    document.getElementById('panel-offline').style.display='none';
-    document.getElementById('panel-online').style.display='block';
-    document.getElementById('btn-mode-offline').style.background='rgba(0,0,0,.3)';
-    document.getElementById('btn-mode-offline').style.borderColor='rgba(255,255,255,.2)';
-    document.getElementById('btn-mode-offline').style.color='rgba(255,255,255,.5)';
-    document.getElementById('btn-mode-online').style.background='rgba(201,168,76,.15)';
-    document.getElementById('btn-mode-online').style.borderColor='var(--gold)';
-    document.getElementById('btn-mode-online').style.color='var(--gold-light)';
     // コードをフォームにセット
     document.getElementById('join-code').value=autoCode;
     // URLをクリーンに（履歴を汚さない）
     if(window.history&&window.history.replaceState){
       window.history.replaceState({},'',window.location.pathname);
     }
+    // btn-mode-online の onclick を実行（接続テストを含む正規フロー）
+    // DOMContentLoaded後に実行されるが念のためsetTimeoutで遅延
+    setTimeout(function(){
+      document.getElementById('btn-mode-online').click();
+    }, 100);
   }
 })();
 function setJM(msg,type){var el=document.getElementById('join-msg');el.textContent=msg;el.className='smsg s-'+type;}
 
 function doJoin(){
-  if(document.getElementById('conn-badge').className.includes('b-err')){
-    setJM('オンライン接続できません。オフラインモードをお使いください。','err');return;
-  }
   var code = document.getElementById('join-code').value.trim().toUpperCase();
   if(code.length<4){setJM('コードを入力してください','err');return;}
   myName = document.getElementById('my-name').value.trim()||'ゲスト';
   myChips = +document.getElementById('my-chips').value||1000;
   setJM('接続中...','info');
   fbGet('rooms/'+code, function(room){
-    if(!room){setJM('ルームが見つかりません','err');return;}
+    if(!room){setJM('ルームが見つかりません（コードを確認してください）','err');return;}
     if(room.status==='started'){setJM('ゲームはすでに開始しています','err');return;}
     // 名前重複チェック
     var existingNames = Object.values(room.players||{}).map(function(p){return p.name.trim().toLowerCase();});
