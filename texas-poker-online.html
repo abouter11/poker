@@ -1507,6 +1507,14 @@ function onState(st){
     var hasAllIn=players.some(function(p){return p.active&&!p.folded&&p.allIn;});
     if(hasAllIn) _allInRevealed=true;
   }
+  // waitFor が自分の場合はrenderAll()前にapを表示状態にする
+  // → renderAll()のapVisible判定で「あなたのターン」が正しく表示される
+  var apEl = document.getElementById('ap');
+  if(st.waitFor===myId){
+    apEl.style.display='block';
+  } else {
+    apEl.style.display='none';
+  }
   renderAll();
   // 非ホスト: フェーズ変化時にオーバーレイ表示
   if(phase>prevPhase && prevPhase>=0 && phase<=3){
@@ -1515,9 +1523,8 @@ function onState(st){
   }
   if(st.showdown){handleSD(st.showdown);return;}
   if(st.result){
-    // 送信中...等の表示を隠してからモーダル表示
     hideInfo();
-    document.getElementById('ap').style.display='none';
+    apEl.style.display='none';
     handleResult(st.result);
     return;
   }
@@ -1526,9 +1533,8 @@ function onState(st){
     var la=st.lastAction;
     showActionBubble(la.playerIdx, la.action, la.amount);
   }
-  document.getElementById('ap').style.display='none';
   if(st.waitFor===myId){
-    hideInfo(); document.getElementById('ap').style.display='block'; renderAction();
+    hideInfo(); renderAction();
   } else if(st.waitFor){
     var curP=players[curIdx];
     if(curP&&curP.isCpu){
@@ -1866,8 +1872,8 @@ function _showAllInReveal(revealMap, cb){
     totalDelay += 220*2 + 200; // 2枚フリップ後 200ms 待機
   });
 
-  // 全フリップ完了後に 1.2秒 見せてからフェードアウト
-  var showDuration = totalDelay + 1200;
+  // 全フリップ完了後に 3.5秒 見せてからフェードアウト
+  var showDuration = totalDelay + 3500;
   setTimeout(function(){
     ov.style.opacity='0';
     setTimeout(function(){
