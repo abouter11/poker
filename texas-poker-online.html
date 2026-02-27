@@ -1403,16 +1403,77 @@ function _launch(room){
     }
   });
   if(isHost){ watchAction(); startRound(); }
-  else showInfo('ホストのゲーム開始を待っています...');
+  else {
+    showInfo('ホストのゲーム開始を待っています...');
+    // 非ホスト: ホスト離脱監視
+    _watchHostPresence();
+  }
+}
+
+var _hostWatchActive = false;
+function _watchHostPresence(){
+  if(_hostWatchActive) return;
+  _hostWatchActive = true;
+  _hostLeftDetected = false;
+  // roomPath の status 変化でもバックアップとして検出
+  fbListen(roomPath, function(room){
+    if(!room) return;
+    if(room.status === 'lobby'){
+      _hostWatchActive = false;
+      if(!_hostLeftDetected && gamePath){
+        _hostLeftDetected = true;
+        _showHostLeft();
+      }
+    }
+  });
+}
+
+function _showHostLeft(){
+  // 既にロビーにいる場合はスキップ
+  if(!gamePath && !roomPath) return;
+  // ibarやモーダルをクリア
+  hideInfo();
+  document.getElementById('ap').style.display='none';
+  document.getElementById('mover').classList.remove('show');
+  // ホスト離脱モーダル表示
+  var mover=document.getElementById('mover');
+  var mtitle=document.getElementById('mtitle');
+  var mbody=document.getElementById('mbody');
+  var mcards=document.getElementById('mcards');
+  var mcomm=document.getElementById('mcomm');
+  var mnext=document.getElementById('mnext');
+  mover.classList.add('show');
+  mtitle.textContent='🚪 ホストが退出しました';
+  mbody.innerHTML='ホストがゲームを終了しました。<br>ロビーに戻ります。';
+  mcards.innerHTML='';
+  mcomm.style.display='none';
+  mnext.style.display='';
+  mnext.textContent='ロビーへ戻る';
+  mnext.onclick=function(){
+    mover.classList.remove('show');
+    window._pokerGoLobby();
+  };
+  // 3秒後に自動でロビーへ
+  setTimeout(function(){
+    if(mover.classList.contains('show')){
+      mover.classList.remove('show');
+      window._pokerGoLobby();
+    }
+  }, 3000);
 }
 
 var _lastPhase=-1, _lastCommLen=0;
+var _hostLeftDetected = false;
 function onState(st){
-  if(!st) return;
-  // ホストは自身のメモリが正とする（Firebase経由で上書きしない）
-  // ただし画面描画と result/showdown は処理する
-  // ホストはpushState内で処理するのでonStateでは何もしない
   if(isHost) return;
+  // st===null = ホストがgame stateを消去して退出した
+  if(!st){
+    if(!_hostLeftDetected && gamePath){
+      _hostLeftDetected = true;
+      _showHostLeft();
+    }
+    return;
+  }
   var prevPhase=_lastPhase, prevCommLen=_lastCommLen;
   comm=st.comm||[]; pot=st.pot||0; phase=st.phase||0;
   curIdx=st.curIdx||0; curBet=st.curBet||0;
@@ -2126,19 +2187,11 @@ function checkEliminated(afterRoundCb){
   var eliminated = players.filter(function(p){ return p.active && p.chips < BB; });
   if(eliminated.length === 0){ afterRoundCb(); return; }
 
-  // CPUは自動リバイ
-  eliminated.forEach(function(p){
-    if(p.isCpu){ doRebuy(p); }
-  });
-
-  var humanElim = eliminated.filter(function(p){ return !p.isCpu; });
-  if(humanElim.length === 0){ renderAll(); afterRoundCb(); return; }
-
-  // 人間プレイヤーのリバイ処理（1人ずつ順番に）
+  // CPU・人間プレイヤーを全員まとめて順番に処理
   var idx = 0;
   function processNext(){
-    if(idx >= humanElim.length){ renderAll(); afterRoundCb(); return; }
-    var p = humanElim[idx++];
+    if(idx >= eliminated.length){ renderAll(); afterRoundCb(); return; }
+    var p = eliminated[idx++];
     var rebuyNum = (p.rebuyCount||0) + 1;
     var label = rebuyNum === 1 ? '初回購入' : '追加購入 ' + rebuyNum + '回目';
     var activeHumans = players.filter(function(q){ return q.active && !q.isCpu && q.idx !== p.idx; });
@@ -2160,8 +2213,9 @@ function checkEliminated(afterRoundCb){
     if((p.rebuyCount||0) > 0){
       purchaseHistory = '<div style="font-size:10px;color:rgba(255,200,100,.7);margin-top:6px;">これまでの購入: 初回 + ' + p.rebuyCount + '回</div>';
     }
-    mbody.innerHTML = '<b style="color:var(--gold-light);">' + p.name + '</b> のチップが不足しました。<br>' +
-      '<span style="font-size:11px;color:rgba(255,255,255,.6);">' + label + ' として ' + _initialChips + ' チップを追加しますか？</span>' +
+    var roleLabel = p.isCpu ? '（CPU）' : '';
+    mbody.innerHTML = '<b style="color:var(--gold-light);">' + p.name + roleLabel + '</b> のチップが不足しました。<br>' +
+      '<span style="font-size:11px;color:rgba(255,255,255,.6);">' + label + ' として ' + rebuyAmt + ' チップを追加しますか？</span>' +
       purchaseHistory;
     // 2ボタン: リバイ or 脱落
     mnext.style.display = 'none';
@@ -2280,6 +2334,8 @@ window._pokerGoLobby = function(){
     fbSet(roomPath+'/players/'+myId, null, function(){});
   }
   // 状態リセット
+  _hostWatchActive=false;
+  _hostLeftDetected=false;
   gamePath=''; holePfx=''; roomPath=''; isHost=false;
   offlineMode=false;
   players=[]; myHole=[]; _initialChips=0;
