@@ -636,11 +636,15 @@ function sc5(cards){
   var cnt={};v.forEach(function(x){cnt[x]=(cnt[x]||0)+1;});
   var g=Object.keys(cnt).map(function(x){return{v:+x,c:cnt[x]};}).sort(function(a,b){return b.c-a.c||b.v-a.v;});
   var rank,hi;
-  if(fl&&st){rank=8;hi=[sh];}else if(g[0].c===4){rank=7;hi=[g[0].v,g[1].v];}
-  else if(g[0].c===3&&g[1].c===2){rank=6;hi=[g[0].v,g[1].v];}else if(fl){rank=5;hi=v;}
-  else if(st){rank=4;hi=[sh];}else if(g[0].c===3){rank=3;hi=[g[0].v,g[1].v,g[2].v];}
+  if(fl&&st){rank=8;hi=[sh];}
+  else if(g[0].c===4){rank=7;hi=[g[0].v,g[1].v];}
+  else if(g[0].c===3&&g[1].c===2){rank=6;hi=[g[0].v,g[1].v];}
+  else if(fl){rank=5;hi=v;}
+  else if(st){rank=4;hi=[sh];}
+  else if(g[0].c===3){rank=3;hi=[g[0].v,g[1].v,g[2].v];}
   else if(g[0].c===2&&g[1].c===2){rank=2;hi=[g[0].v,g[1].v,g[2].v];}
-  else if(g[0].c===2){rank=1;hi=[g[0].v,g[1].v,g[2].v,g[3].v];}else{rank=0;hi=v;}
+  else if(g[0].c===2){rank=1;hi=[g[0].v,g[1].v,g[2].v,g[3].v];}
+  else{rank=0;hi=v;}
   return{rank:rank,hi:hi};
 }
 function cmpSc(a,b){if(a.rank!==b.rank)return a.rank-b.rank;for(var i=0;i<Math.max(a.hi.length,b.hi.length);i++){var d=(a.hi[i]||0)-(b.hi[i]||0);if(d)return d;}return 0;}
@@ -942,6 +946,8 @@ function nextPhaseOffline(){
 }
 
 function doShowdownOffline(){
+  // チップ増減計算用に現在のチップ数を保存
+  players.forEach(function(p){ p.chipsBefore=p.chips; });
   var cont=players.filter(function(p){return p.active&&!p.folded;});
   cont.forEach(function(p){p.best=evalHand(p.hole.concat(comm));});
   cont.sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
@@ -966,24 +972,22 @@ function doShowdownOffline(){
   });
   if(remaining2>0&&cont[0]) cont[0].chips+=remaining2;
   var wins=actualWins.length?actualWins:cont.slice(0,1);
-  var share=0;
-  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+'</span><br>ポット: '+pot;
-  if(wins.length>1)body+='<br>（山分け）';
-  body+='<br><br>';cont.forEach(function(p){body+='<b style="color:#aaa">'+p.name+'</b>: '+HN[p.best.score.rank]+'<br>';});
-  // 全プレイヤー表示（フォールドはFOLD表示、手札なし）
+  // チップ増減を計算（ショーダウン前のchipsBeforeと現在のchipsの差）
   var allActive=players.filter(function(p){return p.active;});
   var ch='<div style="width:100%;">';
   allActive.forEach(function(p){
     var inCont=cont.indexOf(p)>=0;
     var isW=wins.indexOf(p)>=0;
+    var gained=p.chips-p.chipsBefore; // chipsBefore はショーダウン前に保存
+    var gainStr=gained>=0?'<span style="color:#7f7;">+'+gained+'</span>':'<span style="color:#f77;">'+gained+'</span>';
     var bg=isW?'rgba(201,168,76,.18)':inCont?'rgba(0,0,0,.35)':'rgba(80,0,0,.25)';
     var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
-    ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:8px;">';
+    ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
     ch+='<div style="flex:1;min-width:0;">';
-    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(isW?'🏆 ':inCont?'':'❌ ')+p.name+'</div>';
-    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+(inCont?HN[p.best.score.rank]:'FOLD')+'</div>';
+    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';">'+(isW?'🏆 ':inCont?'':'❌ ')+p.name+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.5);">'+(inCont?HN[p.best.score.rank]:'FOLD')+' &nbsp;'+gainStr+' ('+p.chips+')</div>';
     ch+='</div>';
-    if(inCont){
+    if(inCont&&p.hole&&p.hole.length){
       ch+='<div style="display:flex;gap:2px;flex-shrink:0;">';
       p.hole.forEach(function(c){ch+=cH(c,true);});
       ch+='</div>';
@@ -991,7 +995,8 @@ function doShowdownOffline(){
     ch+='</div>';
   });
   ch+='</div>';
-  renderAll();showMsg('ショーダウン',body,'次のラウンド',function(){checkEliminated(function(){startRoundOffline();});},ch);
+  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+'</span>';
+  renderAll();showMsg('ショーダウン',body,'次のラウンド',function(){checkEliminated(function(){startRoundOffline();});},ch,comm);
 }
 
 function renderActionOffline(){
@@ -1259,6 +1264,7 @@ function _launch(room){
   gamePath = roomPath+'/game';
   holePfx  = roomPath+'/holes/';
   showScreen('screen-game');
+  document.getElementById('back-btn-wrap').style.display='block';
   fbListen(gamePath+'/state', onState);
   var _dealShown=false;
   fbListen(holePfx+myId, function(h){
@@ -1366,10 +1372,21 @@ function startRound(){
     p.hole=[];p.bet=0;p.totalBet=0;p.folded=false;p.allIn=false;
   });
   var active=players.filter(function(p){return p.active;});
+  // CPUのみ残った場合はゲーム終了
+  var humanActive=active.filter(function(p){return !p.isCpu;});
+  if(humanActive.length===0){
+    var cpuWinner=active[0];
+    var elimBody='<span class="wn">'+(cpuWinner?cpuWinner.name:'?')+'</span>の優勝！<br><small style="color:rgba(255,255,255,.5)">全人間プレイヤーが脱落しました</small>';
+    pushState({result:{title:'ゲーム終了',body:elimBody,ch:'',gameOver:true}});
+    return;
+  }
+  // CPUが脱落している（チップ不足）場合は既にactive=falseになっているのでOK
+  // 人間が脱落してCPUのみ残る場合の追加チェック
   if(active.length<2){
     var w=active[0];
-    var elimBody='<span class="wn">'+(w?w.name:'?')+'</span>の優勝！<br><small style="color:rgba(255,255,255,.5)">他のプレイヤーが全員脱落しました</small>';
-    pushState({result:{title:'ゲーム終了',body:elimBody,ch:'',gameOver:true}});
+    var isWinnerHuman=w&&!w.isCpu;
+    var winBody='<span class="wn">'+(w?w.name:'?')+'</span>の優勝！<br><small style="color:rgba(255,255,255,.5)">他のプレイヤーが全員脱落しました</small>';
+    pushState({result:{title:'ゲーム終了',body:winBody,ch:'',gameOver:true}});
     return;
   }
   dealerIdx=(dealerIdx+1)%players.length;
@@ -1643,6 +1660,8 @@ function calcSidePots(){
 }
 
 function finishSD(cont,holes){
+  // チップ増減計算用に現在のチップ数を保存（分配前）
+  players.forEach(function(p){ p.chipsBefore=p.chips; });
   cont.forEach(function(p){if(holes[p.idx])p.hole=holes[p.idx];p.best=evalHand(p.hole.concat(comm));});
   cont.sort(function(a,b){return cmpSc(b.best.score,a.best.score);});
   // サイドポット計算
@@ -1660,23 +1679,21 @@ function finishSD(cont,holes){
     if(remainder>0) winners[0].chips+=remainder;
   });
   if(allWinners.length===0) allWinners=cont.slice(0,1);
-  var top=cont[0].best.score;
   var wins=allWinners;
-  var share=0;
-  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+'</span><br>ポット: '+pot;
-  if(wins.length>1) body+='<br>（'+share+'ずつ山分け）';
   // 全プレイヤー（フォールド含む）表示
   var allActiveOnline=players.filter(function(p){return p.active;});
   var ch='<div style="width:100%;">';
   allActiveOnline.forEach(function(p){
     var inCont=cont.indexOf(p)>=0;
     var isW=wins.indexOf(p)>=0;
+    var gained=p.chips-p.chipsBefore;
+    var gainStr=gained>=0?'<span style="color:#7f7;">+'+gained+'</span>':'<span style="color:#f77;">'+gained+'</span>';
     var bg=isW?'rgba(201,168,76,.18)':inCont?'rgba(0,0,0,.35)':'rgba(80,0,0,.25)';
     var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
-    ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:8px;">';
+    ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
     ch+='<div style="flex:1;min-width:0;">';
-    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(isW?'🏆 ':inCont?'':'❌ ')+p.name+'</div>';
-    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+(inCont?HN[p.best.score.rank]:'FOLD')+'</div>';
+    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';">'+(isW?'🏆 ':inCont?'':'❌ ')+p.name+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.5);">'+(inCont?HN[p.best.score.rank]:'FOLD')+' &nbsp;'+gainStr+' ('+p.chips+')</div>';
     ch+='</div>';
     if(inCont&&p.hole&&p.hole.length){
       ch+='<div style="display:flex;gap:2px;flex-shrink:0;">';
@@ -1686,7 +1703,8 @@ function finishSD(cont,holes){
     ch+='</div>';
   });
   ch+='</div>';
-  pushState({showdown:{body:body,ch:ch},reveal:holes,waitFor:null});
+  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+'</span>';
+  pushState({showdown:{body:body,ch:ch,comm:comm},reveal:holes,waitFor:null});
 }
 
 function handleSD(sd){
@@ -1696,27 +1714,19 @@ function handleSD(sd){
     if(isHost){
       startRound();
     } else {
-      // 非ホストは次ラウンドをFirebaseから受け取る
-      // _lastPhaseをリセットして新ラウンドのフェーズ変化を正しく検出
       _lastPhase=-1; _lastCommLen=0;
       showInfo('次のラウンドを待っています...');
     }
-  },sd.ch||'');
+  },sd.ch||'',sd.comm||comm);
 }
 function handleResult(rr){
   if(!rr||!rr.title)return;
   renderAll();
   if(rr.gameOver){
-    // ゲーム終了 → 全員にモーダル表示してロビーへ
     showMsg(rr.title,rr.body,'ロビーへ戻る',function(){
-      // Firebase polls停止
-      Object.keys(_polls).forEach(function(k){fbOff(k);});
-      document.getElementById('back-btn-wrap').style.display='none';
-      offlineMode=false;
-      // ibar非表示
       hideInfo();
       document.getElementById('ap').style.display='none';
-      window._pokerShowScreen('screen-lobby');
+      window._pokerGoLobby();
     },rr.ch||'');
   } else {
     showMsg(rr.title,rr.body,'次のラウンド',function(){
@@ -1726,7 +1736,7 @@ function handleResult(rr){
         _lastPhase=-1; _lastCommLen=0;
         showInfo('次のラウンドを待っています...');
       }
-    },rr.ch||'');
+    },rr.ch||'',comm.length?comm:null);
   }
 }
 
@@ -1830,11 +1840,21 @@ function renderAll(){
 }
 function showInfo(m){document.getElementById('ibar').classList.add('show');document.getElementById('ibar-t').textContent=m;}
 function hideInfo(){document.getElementById('ibar').classList.remove('show');}
-function showMsg(title,body,lbl,fn,ch){
+function showMsg(title,body,lbl,fn,ch,commCards){
   document.getElementById('mover').classList.add('show');
   document.getElementById('mtitle').textContent=title;
   document.getElementById('mbody').innerHTML=body;
   document.getElementById('mcards').innerHTML=ch||'';
+  // コミュニティカード表示
+  var mcomm=document.getElementById('mcomm');
+  if(commCards&&commCards.length){
+    mcomm.style.display='flex';
+    mcomm.innerHTML='<div style="width:100%;text-align:center;font-family:Cinzel,serif;font-size:9px;color:rgba(255,255,255,.4);letter-spacing:2px;margin-bottom:4px;">COMMUNITY CARDS</div>'
+      +commCards.map(function(c){return cH(c,false,false);}).join('');
+  } else {
+    mcomm.style.display='none';
+    mcomm.innerHTML='';
+  }
   var btn=document.getElementById('mnext');btn.textContent=lbl;
   btn.onclick=function(){document.getElementById('mover').classList.remove('show');fn();};
 }
@@ -1930,7 +1950,23 @@ function showScreen(id){
 window._pokerShowScreen = showScreen;
 window._pokerGoLobby = function(){
   document.getElementById('back-btn-wrap').style.display='none';
-  offlineMode = false;
+  // オンラインのFirebaseリスナーを停止
+  if(gamePath){
+    fbOff(gamePath+'/state');
+    fbOff(gamePath+'/action');
+    if(myId) fbOff(holePfx+myId);
+  }
+  // 離脱をFirebaseに記録（ホストなら room status を reset）
+  if(isHost && roomPath){
+    fbPatch(roomPath, {status:'lobby'}, function(){});
+  } else if(roomPath && myId){
+    // 非ホスト: 自分の参加情報を削除
+    fbSet(roomPath+'/players/'+myId, null, function(){});
+  }
+  // 状態リセット
+  gamePath=''; holePfx=''; roomPath=''; isHost=false;
+  offlineMode=false;
+  players=[]; myHole=[];
   showScreen('screen-lobby');
 };
 
@@ -1939,7 +1975,7 @@ window._pokerGoLobby = function(){
 
 <div id="confirm-overlay">
   <div id="confirm-box">
-    <div id="confirm-msg">ゲームを中断して<br>ロビーに戻りますか？</div>
+    <div id="confirm-msg">ゲームを中断して<br>ロビーに戻りますか？<br><small style="color:rgba(255,150,150,.8);font-size:10px;">※途中退出するとゲームが中断されます</small></div>
     <div id="confirm-btns">
       <button id="confirm-yes" onclick="document.getElementById('confirm-overlay').classList.remove('show');window._pokerGoLobby();">戻る</button>
       <button id="confirm-no" onclick="document.getElementById('confirm-overlay').classList.remove('show');">続ける</button>
