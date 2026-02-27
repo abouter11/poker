@@ -52,6 +52,8 @@ body{background:radial-gradient(ellipse at 50%,#1e5535 0%,#0a2010 100%);min-heig
 .seat.waiting{border-color:#fa0;animation:wp .9s infinite alternate;}
 @keyframes wp{from{box-shadow:0 0 6px rgba(255,165,0,.2);}to{box-shadow:0 0 20px rgba(255,165,0,.5);}}
 .seat.folded{opacity:.4;}
+.seat.allin{border-color:rgba(255,80,80,.7);background:rgba(180,30,30,.15);box-shadow:0 0 14px rgba(255,60,60,.25);}
+.sst-allin{font-family:Cinzel,serif;font-size:10px;font-weight:700;color:#ff6060;letter-spacing:2px;text-shadow:0 0 8px rgba(255,80,80,.7);animation:wp .8s infinite alternate;}
 .seat.dealer::before{content:'D';position:absolute;top:-8px;left:-8px;width:19px;height:19px;background:var(--gold);color:#000;border-radius:50%;font-family:Cinzel,serif;font-size:9px;font-weight:700;line-height:19px;text-align:center;}
 .sname{font-family:Cinzel,serif;font-size:10px;color:var(--gold-light);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
 .schips{font-size:11px;color:rgba(255,255,255,.65);}
@@ -1701,6 +1703,7 @@ function advance(){
     runCpuTurn(curP.idx);
   } else {
     pushState({waitFor:curP.pid});
+    if(curP.isMe){ hideInfo(); } // 自分のターン→思考中表示を消す
   }
 }
 
@@ -1937,6 +1940,7 @@ function handleResult(rr){
 // アクションUI
 // ════════════════════════════════════════
 function renderAction(){
+  hideInfo(); // CPU思考中表示を確実にクリア
   var p=players[myIdx];if(!p)return;
   document.getElementById('ap-who').textContent=p.name+' のターン（あなた）';
   var toC=curBet-p.bet;
@@ -2011,20 +2015,25 @@ function renderAll(){
     var show=h&&h.length===2;
     var ch=show?(cH(h[0],true)+cH(h[1],true)):(cH(null,true)+cH(null,true));
     // アクション状態表示
-    var actLabel='';
-    if(p.folded) actLabel='FOLD';
-    else if(p.allIn) actLabel='ALL IN';
-    else if(i===curIdx){
-      if(p.isMe) actLabel='▶ あなたのターン';
-      else if(p.isCpu) actLabel='考え中...';
-      else actLabel='アクション中...';
+    var stHtml='';
+    if(p.folded){
+      stHtml='<div class="sst">FOLD</div>';
+    } else if(p.allIn){
+      s.classList.add('allin');
+      stHtml='<div class="sst-allin">🔴 ALL IN</div>';
+    } else if(i===curIdx){
+      // ibarが表示中（CPU思考中）でも自分のターンなら優先表示しない
+      if(p.isMe) stHtml='<div class="sst" style="color:var(--gold-light);font-weight:700;">▶ あなたのターン</div>';
+      else if(p.isCpu) stHtml='<div class="sst">考え中...</div>';
+      else stHtml='<div class="sst">アクション中...</div>';
+    } else {
+      stHtml='<div class="sst"></div>';
     }
-    var st=actLabel;
     s.innerHTML='<div class="sname">'+p.name+(p.isMe?' ⭐':'')+'</div>'+
       '<div class="schips">'+chipsHTML(p.chips)+'</div>'+
       '<div class="sbet">'+(p.bet?'<span style="font-size:9px">BET </span>'+chipsHTML(p.bet):'')+'</div>'+
       '<div class="scards">'+ch+'</div>'+
-      '<div class="sst">'+st+'</div>';
+      stHtml;
     area.appendChild(s);
   });
   var cc=document.getElementById('comm-cards');cc.innerHTML='';
