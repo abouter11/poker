@@ -2225,6 +2225,8 @@ function send(action,amount){
 // ════════════════════════════════════════
 function renderAll(){
   var area=document.getElementById('seats');area.innerHTML='';
+  // apVisible を forEach の外で1回だけ取得（シートクラス付与より前）
+  var apVisible = document.getElementById('ap').style.display !== 'none';
   players.forEach(function(p,i){
     if(p.eliminated){
       // 脱落プレイヤーを薄く表示
@@ -2250,8 +2252,6 @@ function renderAll(){
     var show=h&&h.length===2;
     var ch=show?(cH(h[0],true)+cH(h[1],true)):(cH(null,true)+cH(null,true));
     // アクション状態表示
-    // アクションパネルが表示中 = 自分のターン確定
-    var apVisible = document.getElementById('ap').style.display !== 'none';
     var stHtml='';
     if(p.folded){
       stHtml='<div class="sst">FOLD</div>';
