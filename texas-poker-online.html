@@ -222,24 +222,6 @@ letter-spacing:6px;margin-bottom:6px;}
 
   <div class="panel">
     <div class="ptitle">🏠 ルームを作成</div>
-    <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">SB</span><input class="num-inp" id="room-sb" value="5"></div>
-    <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">BB</span><input class="num-inp" id="room-bb" value="10"></div>
-    <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">CPU人数</span>
-      <div style="display:flex;gap:6px;">
-        <button class="online-cpu-btn" data-n="0" style="padding:5px 10px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">0</button>
-        <button class="online-cpu-btn" data-n="1" style="padding:5px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">1</button>
-        <button class="online-cpu-btn" data-n="2" style="padding:5px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">2</button>
-        <button class="online-cpu-btn" data-n="3" style="padding:5px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">3</button>
-        <button class="online-cpu-btn" data-n="4" style="padding:5px 10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">4</button>
-      </div>
-    </div>
-    <div class="row"><span style="font-size:12px;color:rgba(255,255,255,.5);">難易度</span>
-      <div style="display:flex;gap:6px;">
-        <button class="online-diff-btn" data-d="easy" style="padding:5px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">EASY</button>
-        <button class="online-diff-btn" data-d="normal" style="padding:5px 9px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">NORMAL</button>
-        <button class="online-diff-btn" data-d="hard" style="padding:5px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">HARD</button>
-      </div>
-    </div>
     <button class="btn" id="btn-create">ルームを作成</button>
     <div id="room-created" style="display:none;margin-top:14px;">
       <div class="slabel">ルームコード（タップでコピー）</div>
@@ -251,7 +233,15 @@ letter-spacing:6px;margin-bottom:6px;}
   <div id="host-settings" style="display:none;margin-top:12px;padding:10px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(201,168,76,.2);">
     <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold-light);letter-spacing:2px;margin-bottom:8px;">HOST SETTINGS</div>
     <div class="row" style="margin-bottom:8px;">
-      <span style="font-size:12px;color:rgba(255,255,255,.5);">全員のチップ</span>
+      <span style="font-size:12px;color:rgba(255,255,255,.5);">SB</span>
+      <input class="num-inp" id="room-sb" value="5" style="width:70px;">
+    </div>
+    <div class="row" style="margin-bottom:8px;">
+      <span style="font-size:12px;color:rgba(255,255,255,.5);">BB</span>
+      <input class="num-inp" id="room-bb" value="10" style="width:70px;">
+    </div>
+    <div class="row" style="margin-bottom:8px;">
+      <span style="font-size:12px;color:rgba(255,255,255,.5);">開始チップ</span>
       <div style="display:flex;gap:6px;align-items:center;">
         <input class="num-inp" id="host-chips" value="500" style="width:70px;">
         <button id="btn-apply-chips" style="padding:5px 10px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:10px;cursor:pointer;touch-action:manipulation;">適用</button>
@@ -694,26 +684,8 @@ function setMode(mode){
 // モードボタン設定
 document.getElementById('btn-mode-offline').onclick = function(){ setMode('offline'); };
 
-// オンラインCPU設定
+// オンラインCPU設定（HOST SETTINGSパネルで管理）
 var onlineCpuCount=0, onlineCpuDifficulty='normal';
-document.querySelectorAll('.online-cpu-btn').forEach(function(b){
-  b.addEventListener('click',function(){
-    onlineCpuCount=+this.dataset.n;
-    document.querySelectorAll('.online-cpu-btn').forEach(function(x){
-      x.style.background='rgba(0,0,0,.4)';x.style.borderColor='rgba(255,255,255,.2)';x.style.color='rgba(255,255,255,.5)';
-    });
-    this.style.background='rgba(201,168,76,.15)';this.style.borderColor='var(--gold)';this.style.color='var(--gold-light)';
-  });
-});
-document.querySelectorAll('.online-diff-btn').forEach(function(b){
-  b.addEventListener('click',function(){
-    onlineCpuDifficulty=this.dataset.d;
-    document.querySelectorAll('.online-diff-btn').forEach(function(x){
-      x.style.background='rgba(0,0,0,.4)';x.style.borderColor='rgba(255,255,255,.2)';x.style.color='rgba(255,255,255,.5)';
-    });
-    this.style.background='rgba(201,168,76,.15)';this.style.borderColor='var(--gold)';this.style.color='var(--gold-light)';
-  });
-});
 // ロビーボタンのonclickはHTML側で定義済み
 
 // 準備完了ボタン
@@ -751,9 +723,14 @@ function initHostSettings(){
       fbPatch(roomPath, {cpuDifficulty:onlineCpuDifficulty}, function(){});
     });
   });
-  // チップ適用ボタン
+  // チップ・SB・BB 適用ボタン
   document.getElementById('btn-apply-chips').addEventListener('click', function(){
     var newChips=+document.getElementById('host-chips').value||500;
+    var newSB=+document.getElementById('room-sb').value||5;
+    var newBB=+document.getElementById('room-bb').value||10;
+    SB=newSB; BB=newBB; myChips=newChips;
+    // SB/BB をFirebaseに更新
+    fbPatch(roomPath, {SB:newSB, BB:newBB}, function(){});
     // 全プレイヤーのチップを更新
     fbGet(roomPath+'/players', function(ps){
       if(!ps) return;
@@ -761,10 +738,9 @@ function initHostSettings(){
       Object.keys(ps).forEach(function(id){ patch[id+'/chips']=newChips; });
       fbPatch(roomPath+'/players', patch, function(){
         var btn=document.getElementById('btn-apply-chips');
-        btn.textContent='✓'; setTimeout(function(){btn.textContent='適用';},1000);
+        btn.textContent='✓ 適用済み'; setTimeout(function(){btn.textContent='適用';},1200);
       });
     });
-    myChips=newChips;
   });
 }
 document.getElementById('btn-mode-online').onclick = function(){
@@ -1168,7 +1144,8 @@ function renderPlistWithCpu(ps, cpuCnt, cpuDiff, readyMap){
       +'<span style="color:'+(isDup?'#f88':'')+'">'+p.name+(isMe?' (あなた)':'')+'</span>'+dupWarn+readyBadge+'</div>';
   });
   // CPUプレイヤー表示
-  for(var ci=0;ci<cpuCnt;ci++){
+  var safeCpuCnt=Math.min(parseInt(cpuCnt)||0, CPU_NAMES.length);
+  for(var ci=0;ci<safeCpuCnt;ci++){
     el.innerHTML+='<div class="pitem"><div class="dot" style="background:rgba(100,150,255,.7)"></div>'
       +'<span style="color:rgba(150,180,255,.8)">'+CPU_NAMES[ci]+'</span>'
       +'<div class="htag" style="background:rgba(30,30,120,.5);border-color:rgba(100,150,255,.3);color:#8af;">CPU·'+(cpuDiff||'normal').toUpperCase()+'</div></div>';
