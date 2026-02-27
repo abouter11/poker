@@ -1387,8 +1387,9 @@ function startRound(){
   function afterDeal(){
     var firstP=players[curIdx];
     if(isHost && firstP && firstP.isCpu && !firstP.folded && !firstP.allIn){
+      curIdx=firstP.idx;
       pushState({waitFor:firstWaitFor});
-      runCpuTurn();
+      runCpuTurn(firstP.idx);
     } else {
       pushState({waitFor:firstWaitFor});
     }
@@ -1448,13 +1449,14 @@ function applyAction(d){
   showActionBubble(d.playerIdx, d.action, d.amount||0);
 }
 
-function runCpuTurn(){
-  var cpuIdx=curIdx;
+function runCpuTurn(targetIdx){
+  // targetIdx を明示的に受け取る（curIdx に依存しない）
+  var cpuIdx = (targetIdx !== undefined) ? targetIdx : curIdx;
+  curIdx = cpuIdx; // curIdx も合わせて更新
   var p=players[cpuIdx];
   if(!p||!p.isCpu||p.folded||p.allIn){ advance(); return; }
   showInfo(p.name+' が考えています...');
   renderAll();
-  var thinkTime=700+Math.floor(Math.random()*500);
   setTimeout(function(){
     var p2=players[cpuIdx];
     if(!p2||p2.folded||p2.allIn){advance();return;}
@@ -1489,7 +1491,7 @@ function runCpuTurn(){
     renderAll();
     pushState({lastAction:{playerIdx:cpuIdx,action:dec.action,amount:dec.amount||0}});
     advance();
-  }, thinkTime);
+  }, 700+Math.floor(Math.random()*500));
 }
 
 function advance(){
@@ -1516,9 +1518,8 @@ function advance(){
     nextPhase(); return;
   }
   if(isHost && curP.isCpu){
-    // 先にpushStateで状態をFirebaseに反映、その後CPUターン実行
     pushState({waitFor:curP.pid});
-    runCpuTurn();
+    runCpuTurn(curP.idx);
   } else {
     pushState({waitFor:curP.pid});
   }
@@ -1594,8 +1595,9 @@ function nextPhase(){
       firstP=nextAct;
     }
     if(isHost && firstP.isCpu){
+      curIdx=firstP.idx;
       pushState({waitFor:firstP.pid});
-      runCpuTurn();
+      runCpuTurn(firstP.idx);
     } else {
       pushState({waitFor:firstP.pid});
     }
