@@ -1366,6 +1366,7 @@ function pushState(extra){
 }
 
 function startRound(){
+  _cpuQueue=[];_cpuBusy=false;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   // チップ不足で脱落判定（BBに届かない場合）
   players.forEach(function(p){
@@ -1469,17 +1470,32 @@ function applyAction(d){
   showActionBubble(d.playerIdx, d.action, d.amount||0);
 }
 
-function runCpuTurn(targetIdx){
-  // targetIdx を明示的に受け取る（curIdx に依存しない）
-  var cpuIdx = (targetIdx !== undefined) ? targetIdx : curIdx;
-  curIdx = cpuIdx; // curIdx も合わせて更新
+// CPUターンキュー: [{idx}] を順次処理
+var _cpuQueue=[];
+var _cpuBusy=false;
+
+function enqueueCpu(idx){
+  _cpuQueue.push(idx);
+  if(!_cpuBusy) processCpuQueue();
+}
+
+function processCpuQueue(){
+  if(_cpuQueue.length===0){ _cpuBusy=false; return; }
+  _cpuBusy=true;
+  var cpuIdx=_cpuQueue.shift();
+  curIdx=cpuIdx;
   var p=players[cpuIdx];
-  if(!p||!p.isCpu||p.folded||p.allIn){ advance(); return; }
+  if(!p||!p.isCpu||p.folded||p.allIn){
+    _cpuBusy=false;
+    advance();
+    return;
+  }
   showInfo(p.name+' が考えています...');
   renderAll();
   setTimeout(function(){
+    _cpuBusy=false;
     var p2=players[cpuIdx];
-    if(!p2||p2.folded||p2.allIn){advance();return;}
+    if(!p2||p2.folded||p2.allIn){ advance(); return; }
     var dec;
     try{
       dec=cpuDecide(p2,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
@@ -1511,7 +1527,13 @@ function runCpuTurn(targetIdx){
     renderAll();
     pushState({lastAction:{playerIdx:cpuIdx,action:dec.action,amount:dec.amount||0}});
     advance();
-  }, 700+Math.floor(Math.random()*500));
+  }, 700+Math.floor(Math.random()*400));
+}
+
+function runCpuTurn(targetIdx){
+  var cpuIdx=(targetIdx!==undefined)?targetIdx:curIdx;
+  curIdx=cpuIdx;
+  enqueueCpu(cpuIdx);
 }
 
 function advance(){
