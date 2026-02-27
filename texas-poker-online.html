@@ -495,6 +495,19 @@ function chipsHTML(amount){
 var SUITS=['♠','♥','♦','♣'], RANKS=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
 var RV={}; RANKS.forEach(function(r,i){RV[r]=i+2;});
 var HN=['ハイカード','ワンペア','ツーペア','スリーカード','ストレート','フラッシュ','フルハウス','フォーカード','ストレートフラッシュ'];
+var RN_MAP={2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A'};
+function handDetail(score){
+  var h=score.hi; var r=score.rank;
+  if(r===8||r===4) return RN_MAP[h[0]]+'ハイ';
+  if(r===7) return RN_MAP[h[0]]+'×4 ('+RN_MAP[h[1]]+'キック)';
+  if(r===6) return RN_MAP[h[0]]+'フル '+RN_MAP[h[1]];
+  if(r===5) return RN_MAP[h[0]]+'ハイ';
+  if(r===3) return RN_MAP[h[0]]+'×3 ('+RN_MAP[h[1]]+','+RN_MAP[h[2]]+'キック)';
+  if(r===2) return RN_MAP[h[0]]+' & '+RN_MAP[h[1]]+' ('+RN_MAP[h[2]]+'キック)';
+  if(r===1) return RN_MAP[h[0]]+'ペア ('+RN_MAP[h[1]]+','+RN_MAP[h[2]]+','+RN_MAP[h[3]]+'キック)';
+  if(r===0) return RN_MAP[h[0]]+'ハイ';
+  return '';
+}
 function makeDeck(){var d=[];SUITS.forEach(function(s){RANKS.forEach(function(r){d.push({r:r,s:s});});});return d;}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function isRed(s){return s==='♥'||s==='♦';}
@@ -981,12 +994,16 @@ function doShowdownOffline(){
     var isW=wins.indexOf(p)>=0;
     var gained=p.chips-p.chipsBefore; // chipsBefore はショーダウン前に保存
     var gainStr=gained>=0?'<span style="color:#7f7;">+'+gained+'</span>':'<span style="color:#f77;">'+gained+'</span>';
+    var isElim2=p.eliminated||false;
     var bg=isW?'rgba(201,168,76,.18)':inCont?'rgba(0,0,0,.35)':'rgba(80,0,0,.25)';
     var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
     ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
     ch+='<div style="flex:1;min-width:0;">';
-    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';">'+(isW?'🏆 ':inCont?'':'❌ ')+p.name+'</div>';
-    ch+='<div style="font-size:9px;color:rgba(255,255,255,.5);">'+(inCont?HN[p.best.score.rank]:'FOLD')+' &nbsp;'+gainStr+' ('+p.chips+')</div>';
+    var statusTxt2=isElim2?'💀 ELIMINATED':inCont?HN[p.best.score.rank]+' ('+handDetail(p.best.score)+')':'FOLD';
+    var prefix2=isW?'🏆 ':isElim2?'':inCont?'':'❌ ';
+    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';">'+prefix2+p.name+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.5);">'+statusTxt2+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+gainStr+' → '+p.chips+'chips</div>';
     ch+='</div>';
     if(inCont&&p.hole&&p.hole.length){
       ch+='<div style="display:flex;gap:2px;flex-shrink:0;">';
@@ -996,7 +1013,8 @@ function doShowdownOffline(){
     ch+='</div>';
   });
   ch+='</div>';
-  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+'</span>';
+  var winDetail2=handDetail(wins[0].best.score);
+  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+' ('+winDetail2+')</span>';
   renderAll();showMsg('ショーダウン',body,'次のラウンド',function(){checkEliminated(function(){startRoundOffline();});},ch,comm);
 }
 
@@ -1266,7 +1284,9 @@ function _launch(room){
   holePfx  = roomPath+'/holes/';
   showScreen('screen-game');
   document.getElementById('back-btn-wrap').style.display='block';
-  fbListen(gamePath+'/state', onState);
+  // ホストはstateを自分で管理するのでListenしない
+  // 非ホストのみstateをListenしてゲーム状態を同期する
+  if(!isHost) fbListen(gamePath+'/state', onState);
   var _dealShown=false;
   fbListen(holePfx+myId, function(h){
     if(!h||h.length!==2) return;
@@ -1288,17 +1308,8 @@ function onState(st){
   if(!st) return;
   // ホストは自身のメモリが正とする（Firebase経由で上書きしない）
   // ただし画面描画と result/showdown は処理する
-  if(isHost){
-    if(st.showdown){handleSD(st.showdown);return;}
-    if(st.result){hideInfo();document.getElementById('ap').style.display='none';handleResult(st.result);return;}
-    // ホスト自身のターンならアクションパネルを表示
-    if(st.waitFor===myId){
-      hideInfo();
-      document.getElementById('ap').style.display='block';
-      renderAction();
-    }
-    return;
-  }
+  // ホストはpushState内で処理するのでonStateでは何もしない
+  if(isHost) return;
   var prevPhase=_lastPhase, prevCommLen=_lastCommLen;
   comm=st.comm||[]; pot=st.pot||0; phase=st.phase||0;
   curIdx=st.curIdx||0; curBet=st.curBet||0;
@@ -1363,6 +1374,16 @@ function pushState(extra){
   };
   if(extra) Object.keys(extra).forEach(function(k){st[k]=extra[k];});
   fbSet(gamePath+'/state', st);
+  // ホストは自分でonStateを呼ばないが、showdown/resultはローカルで処理
+  if(isHost){
+    if(st.showdown) handleSD(st.showdown);
+    else if(st.result) handleResult(st.result);
+    else if(st.waitFor===myId){
+      hideInfo();
+      document.getElementById('ap').style.display='block';
+      renderAction();
+    }
+  }
 }
 
 function startRound(){
@@ -1475,6 +1496,8 @@ var _cpuQueue=[];
 var _cpuBusy=false;
 
 function enqueueCpu(idx){
+  // 同じidxが既にキューにあればスキップ（二重登録防止）
+  if(_cpuBusy && _cpuQueue.indexOf(idx)>=0) return;
   _cpuQueue.push(idx);
   if(!_cpuBusy) processCpuQueue();
 }
@@ -1493,9 +1516,12 @@ function processCpuQueue(){
   showInfo(p.name+' が考えています...');
   renderAll();
   setTimeout(function(){
-    _cpuBusy=false;
     var p2=players[cpuIdx];
-    if(!p2||p2.folded||p2.allIn){ advance(); return; }
+    if(!p2||p2.folded||p2.allIn){
+      _cpuBusy=false;
+      setTimeout(function(){advance();},0);
+      return;
+    }
     var dec;
     try{
       dec=cpuDecide(p2,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
@@ -1525,9 +1551,10 @@ function processCpuQueue(){
     if(acts.indexOf(cpuIdx)<0) acts.push(cpuIdx);
     showActionBubble(cpuIdx,dec.action,dec.amount||0);
     renderAll();
+    _cpuBusy=false;
     pushState({lastAction:{playerIdx:cpuIdx,action:dec.action,amount:dec.amount||0}});
-    advance();
-  }, 700+Math.floor(Math.random()*400));
+    setTimeout(function(){advance();},50);
+  }, 800+Math.floor(Math.random()*400));
 }
 
 function runCpuTurn(targetIdx){
@@ -1715,8 +1742,12 @@ function finishSD(cont,holes){
     var border=isW?'rgba(201,168,76,.6)':inCont?'rgba(255,255,255,.12)':'rgba(200,0,0,.3)';
     ch+='<div style="margin-bottom:6px;padding:5px 8px;border-radius:8px;background:'+bg+';border:1px solid '+border+';display:flex;align-items:center;gap:6px;">';
     ch+='<div style="flex:1;min-width:0;">';
-    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';">'+(isW?'🏆 ':inCont?'':'❌ ')+p.name+'</div>';
-    ch+='<div style="font-size:9px;color:rgba(255,255,255,.5);">'+(inCont?HN[p.best.score.rank]:'FOLD')+' &nbsp;'+gainStr+' ('+p.chips+')</div>';
+    var isElim=p.eliminated||(!p.active&&!inCont);
+    var statusTxt=isElim?'💀 ELIMINATED':inCont?HN[p.best.score.rank]+' ('+handDetail(p.best.score)+')':'FOLD';
+    var prefix=isW?'🏆 ':isElim?'':inCont?'':'❌ ';
+    ch+='<div style="font-family:Cinzel,serif;font-size:10px;color:'+(isW?'var(--gold-light)':inCont?'rgba(255,255,255,.7)':'rgba(255,100,100,.7)')+';">'+prefix+p.name+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.5);">'+statusTxt+'</div>';
+    ch+='<div style="font-size:9px;color:rgba(255,255,255,.4);">'+gainStr+' → '+p.chips+'chips</div>';
     ch+='</div>';
     if(inCont&&p.hole&&p.hole.length){
       ch+='<div style="display:flex;gap:2px;flex-shrink:0;">';
@@ -1726,7 +1757,8 @@ function finishSD(cont,holes){
     ch+='</div>';
   });
   ch+='</div>';
-  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+'</span>';
+  var winDetail=handDetail(wins[0].best.score);
+  var body='<span class="wn">'+wins.map(function(w){return w.name;}).join(' & ')+'</span>の勝利！<br><span class="hn">'+HN[wins[0].best.score.rank]+' ('+winDetail+')</span>';
   pushState({showdown:{body:body,ch:ch,comm:comm},reveal:holes,waitFor:null});
 }
 
