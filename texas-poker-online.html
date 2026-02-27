@@ -1758,7 +1758,7 @@ function rundownAllIn(){
     if(gamePath) pushState({waitFor:null});
     showPhaseOverlay(stepPhase, stepCards, function(){
       // 次のステップへ（少し間を置く）
-      setTimeout(function(){ revealStep(cb); }, 600);
+      setTimeout(function(){ revealStep(cb); }, 1500);
     });
   }
   revealStep(function(){
