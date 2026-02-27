@@ -1359,7 +1359,6 @@ function pushState(extra){
 }
 
 function startRound(){
-  _cpuRunning=false;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   // チップ不足で脱落判定（BBに届かない場合）
   players.forEach(function(p){
@@ -1388,7 +1387,6 @@ function startRound(){
   function afterDeal(){
     var firstP=players[curIdx];
     if(isHost && firstP && firstP.isCpu && !firstP.folded && !firstP.allIn){
-      _cpuRunning=false; // ラウンド開始時は必ずリセット
       pushState({waitFor:firstWaitFor});
       runCpuTurn();
     } else {
@@ -1450,20 +1448,20 @@ function applyAction(d){
   showActionBubble(d.playerIdx, d.action, d.amount||0);
 }
 
-var _cpuRunning=false;
 function runCpuTurn(){
-  if(_cpuRunning){ return; }
-  var p=players[curIdx];
-  if(!p||!p.isCpu||p.folded||p.allIn){ advance(); return; }
-  _cpuRunning=true;
   var savedIdx=curIdx;
+  var p=players[savedIdx];
+  if(!p||!p.isCpu||p.folded||p.allIn){ advance(); return; }
   showInfo(p.name+' が考えています...');
   renderAll();
-  // CPU思考中はFirebaseに書かない（onStateループ防止）
   setTimeout(function(){
+    // savedIdx のCPUがまだアクション待ちか確認
+    var p2=players[savedIdx];
+    if(!p2||!p2.isCpu||p2.folded||p2.allIn||curIdx!==savedIdx){
+      // 既に別の処理が進んでいる → スキップ
+      return;
+    }
     try{
-      var p2=players[savedIdx];
-      if(!p2||!p2.isCpu||p2.folded||p2.allIn){_cpuRunning=false;advance();return;}
       var dec=cpuDecide(p2,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
       if(dec.action==='fold'){ p2.folded=true; }
       else if(dec.action==='check'){}
@@ -1491,12 +1489,11 @@ function runCpuTurn(){
       showActionBubble(savedIdx,dec.action,dec.amount||0);
       renderAll();
       pushState({lastAction:{playerIdx:savedIdx,action:dec.action,amount:dec.amount||0}});
+      advance();
     }catch(e){
-      console.error('runCpuTurn error:',e);
-    }finally{
-      _cpuRunning=false;
+      console.error('CPU error:',e);
+      advance();
     }
-    setTimeout(function(){ advance(); },300);
   }, 800+Math.random()*400);
 }
 
@@ -1524,34 +1521,51 @@ function advance(){
     nextPhase(); return;
   }
   if(isHost && curP.isCpu){
-    // _cpuRunningが残っている場合は少し待って再試行
-    if(_cpuRunning){
-      setTimeout(function(){ advance(); }, 200);
-    } else {
-      runCpuTurn();
-    }
+    runCpuTurn();
   } else {
     pushState({waitFor:curP.pid});
   }
 }
 
-// 全員オールイン時: 残りのコミュニティカードを一気に公開してショーダウン
+// 全員オールイン時: フロップ→ターン→リバーを順番に演出付きで公開してショーダウン
 function rundownAllIn(){
-  // 残りのカードを全て公開
-  var newCards=[];
-  while(comm.length<5){
-    var c=deck.pop(); comm.push(c); newCards.push(c);
-  }
-  renderAll();
-  if(newCards.length>0){
-    // フェーズ名を最終フェーズに合わせて表示
-    var phaseName=comm.length>=5?'SHOWDOWN':'';
-    showPhaseOverlay(phaseName, newCards, function(){
-      doShowdown();
+  function revealStep(cb){
+    if(comm.length>=5){ cb(); return; }
+    // 次に公開するフェーズを決定
+    var stepPhase, stepCards=[];
+    if(comm.length===0){
+      // FLOP: 3枚
+      stepPhase='FLOP';
+      stepCards=[deck.pop(),deck.pop(),deck.pop()];
+      comm.push(stepCards[0],stepCards[1],stepCards[2]);
+      phase=1;
+    } else if(comm.length===3){
+      // TURN: 1枚
+      stepPhase='TURN';
+      stepCards=[deck.pop()];
+      comm.push(stepCards[0]);
+      phase=2;
+    } else if(comm.length===4){
+      // RIVER: 1枚
+      stepPhase='RIVER';
+      stepCards=[deck.pop()];
+      comm.push(stepCards[0]);
+      phase=3;
+    } else {
+      cb(); return;
+    }
+    renderAll();
+    // オンラインの場合は非ホストにも同期
+    if(gamePath) pushState({waitFor:null});
+    showPhaseOverlay(stepPhase, stepCards, function(){
+      // 次のステップへ（少し間を置く）
+      setTimeout(function(){ revealStep(cb); }, 600);
     });
-  } else {
-    doShowdown();
   }
+  revealStep(function(){
+    renderAll();
+    doShowdown();
+  });
 }
 
 function nextPhase(){
@@ -1583,7 +1597,6 @@ function nextPhase(){
       firstP=nextAct;
     }
     if(isHost && firstP.isCpu){
-      _cpuRunning=false;
       pushState({waitFor:firstP.pid});
       runCpuTurn();
     } else {
