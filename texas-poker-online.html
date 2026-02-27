@@ -138,14 +138,14 @@ z-index:10;pointer-events:none;animation:bubblePop .25s ease;}
 #phase-overlay{display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;pointer-events:none;}
 #phase-overlay.show{display:flex;}
 #phase-card{background:linear-gradient(135deg,rgba(10,30,15,.95),rgba(5,15,8,.98));
-border:2px solid var(–gold);border-radius:18px;padding:20px 36px;text-align:center;
-animation:phaseIn .4s ease forwards;}
+border:2px solid var(–gold);border-radius:18px;padding:16px 20px;text-align:center;
+animation:phaseIn .4s ease forwards;max-width:92vw;box-sizing:border-box;}
 @keyframes phaseIn{from{opacity:0;transform:scale(.6);}to{opacity:1;transform:scale(1);}}
 #phase-name{font-family:Cinzel,serif;font-size:26px;font-weight:900;
 background:linear-gradient(135deg,#8a6820,#f0d080,#c9a84c);
 -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 letter-spacing:6px;margin-bottom:6px;}
-#phase-cards-row{display:flex;gap:8px;justify-content:center;margin-top:8px;}
+#phase-cards-row{display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap;max-width:100%;}
 
 /* ディール演出 */
 #deal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:60;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
@@ -155,6 +155,26 @@ letter-spacing:6px;margin-bottom:6px;}
 @keyframes dealIn{from{opacity:0;transform:translateY(-30px) rotate(-5deg);}to{opacity:1;transform:translateY(0) rotate(0deg);}}
 .deal-card-anim{animation:dealIn .35s ease forwards;}
 .deal-card-anim:nth-child(2){animation-delay:.2s;opacity:0;}
+
+/* コミュニティカード フリップ演出 */
+.comm-card-wrap{perspective:800px;display:inline-block;}
+.comm-card-inner{
+position:relative;transform-style:preserve-3d;
+transition:transform .5s ease;
+transform:rotateY(-180deg);  /* 初期: 裏向き */
+}
+.comm-card-inner.flipped{transform:rotateY(0deg);}
+.comm-card-face,.comm-card-back{
+position:absolute;top:0;left:0;
+backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.comm-card-back{transform:rotateY(180deg);}
+/* フロップ: 左からスライドイン */
+@keyframes commSlideIn{
+from{opacity:0;transform:translateX(-24px) rotateY(-180deg);}
+to{opacity:1;transform:translateX(0) rotateY(0deg);}
+}
+.comm-anim{animation:commSlideIn .45s ease forwards;opacity:0;}
 
 #confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;align-items:center;justify-content:center;padding:20px;}
 #confirm-overlay.show{display:flex;}
@@ -920,6 +940,7 @@ function hideCpuBar(){document.getElementById('cpu-bar').style.display='none';}
 // ── オフライン ゲームループ ──
 function startRoundOffline(){
   _allInRevealed=false;
+  _commAnimating=false;
   // 初回のみ initialChips を設定
   if(!_initialChips) _initialChips = +document.getElementById('off-chips').value||500;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
@@ -1579,6 +1600,7 @@ function pushState(extra){
 function startRound(){
   _cpuQueue=[];_cpuBusy=false;
   _allInRevealed=false;
+  _commAnimating=false;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   // eliminatedフラグ済みのプレイヤーのみ非アクティブ
   // (checkEliminated → startRound の順で呼ばれるので
@@ -1835,7 +1857,7 @@ function _showAllInReveal(revealMap, cb){
       inner.style.cssText = [
         'width:44px;height:64px',
         'position:relative;transform-style:preserve-3d',
-        'transition:transform .45s ease',
+        'transition:transform .7s ease',
         'transform:rotateY(0deg)'
       ].join(';');
       // 裏面
@@ -1867,9 +1889,9 @@ function _showAllInReveal(revealMap, cb){
     r.cardEls.forEach(function(el, ci){
       (function(flipEl, delay){
         setTimeout(function(){ flipEl.style.transform='rotateY(180deg)'; }, delay);
-      })(el, totalDelay + ci*220);
+      })(el, totalDelay + ci*320);
     });
-    totalDelay += 220*2 + 200; // 2枚フリップ後 200ms 待機
+    totalDelay += 320*2 + 300; // 2枚フリップ後 300ms 待機
   });
 
   // 全フリップ完了後に 3.5秒 見せてからフェードアウト
@@ -2259,8 +2281,11 @@ function renderAll(){
       stHtml;
     area.appendChild(s);
   });
-  var cc=document.getElementById('comm-cards');cc.innerHTML='';
-  for(var i=0;i<5;i++) cc.innerHTML+=i<comm.length?cH(comm[i]):cH(null);
+  // アニメーション中はcomm-cardsを上書きしない（新カードが表向きになるのを防ぐ）
+  if(!_commAnimating){
+    var cc=document.getElementById('comm-cards');cc.innerHTML='';
+    for(var i=0;i<5;i++) cc.innerHTML+=i<comm.length?cH(comm[i]):cH(null);
+  }
   document.getElementById('pot').innerHTML='<span style="opacity:.6;font-size:10px">POT </span>'+chipsHTML(pot);
   document.getElementById('phase').textContent=PNAMES[Math.min(phase,4)]||'SHOWDOWN';
 }
@@ -2435,14 +2460,104 @@ function showPhaseOverlay(phaseName, newCards, cb){
   var cr=document.getElementById('phase-cards-row');
   pn.textContent=phaseName;
   cr.innerHTML='';
+
+  // カードを裏向きで並べてから1枚ずつフリップ
+  var cardInners=[];
   if(newCards&&newCards.length){
-    newCards.forEach(function(c){cr.innerHTML+=cH(c);});
+    newCards.forEach(function(c){
+      var wrap=document.createElement('div');
+      wrap.className='comm-card-wrap';
+      var inner=document.createElement('div');
+      inner.className='comm-card-inner'; // 初期: 裏向き
+      // 表面
+      var face=document.createElement('div');
+      face.className='comm-card-face';
+      face.innerHTML=cH(c,false,false);
+      // 裏面
+      var back=document.createElement('div');
+      back.className='comm-card-back';
+      back.innerHTML=cH(null,false,false);
+      inner.appendChild(face);
+      inner.appendChild(back);
+      // innerのサイズをデフォルトカード(44×64)に合わせる
+      inner.style.cssText='position:relative;transform-style:preserve-3d;transition:transform .8s ease;transform:rotateY(-180deg);width:44px;height:64px;';
+      face.style.cssText='position:absolute;top:0;left:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;';
+      back.style.cssText='position:absolute;top:0;left:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);';
+      wrap.style.cssText='perspective:800px;';
+      wrap.appendChild(inner);
+      cr.appendChild(wrap);
+      cardInners.push(inner);
+    });
   }
+
+  // アニメーション開始: 場のカードを上書きしないようにフラグON
+  // まず場のカードを「新カードは裏向き、既存カードはそのまま」で描画
+  _commAnimating=true;
+  _renderCommWithBackCards(newCards);
+
   ov.classList.add('show');
+
+  // 150ms後から1枚ずつ180msおきにフリップ
+  cardInners.forEach(function(inner, i){
+    setTimeout(function(){ inner.style.transform='rotateY(0deg)'; }, 250 + i*320);
+  });
+
+  // 全カードフリップ後に少し見せてからオーバーレイを閉じてcb
+  var flipDone = 250 + cardInners.length*320 + 1200;
+  var total = Math.max(flipDone, 1800);
   setTimeout(function(){
     ov.classList.remove('show');
-    if(cb) cb();
-  }, 1400);
+    // メインテーブルのcomm-cardsをアニメーション付きで更新
+    _animateCommCards(newCards, function(){
+      _commAnimating=false;
+      if(cb) cb();
+    });
+  }, total);
+}
+
+// オーバーレイ表示中: 新カードだけ裏向きで場に置く
+function _renderCommWithBackCards(newCards){
+  var cc=document.getElementById('comm-cards');
+  cc.innerHTML='';
+  var existingCount=comm.length-(newCards?newCards.length:0);
+  // 既存カードはそのまま表向きで表示
+  for(var i=0;i<existingCount;i++){
+    if(comm[i]) cc.innerHTML+=cH(comm[i]);
+  }
+  // 新カードは裏向きで表示（オーバーレイのフリップが終わるまで）
+  if(newCards&&newCards.length){
+    newCards.forEach(function(){
+      cc.innerHTML+=cH(null); // 裏向き
+    });
+  }
+  // 残りスロット
+  var shown=existingCount+(newCards?newCards.length:0);
+  for(var j=shown;j<5;j++) cc.innerHTML+=cH(null);
+}
+
+// メインテーブルのコミュニティカードをアニメーション付きで再描画
+function _animateCommCards(newCards, cb){
+  var cc=document.getElementById('comm-cards');
+  var existingCount=comm.length-(newCards?newCards.length:0);
+  cc.innerHTML='';
+  // 既存カード（アニメーションなし）
+  for(var i=0;i<existingCount;i++){
+    if(comm[i]) cc.innerHTML+=cH(comm[i]);
+  }
+  // 新しいカード（スライドイン+フリップ）
+  if(newCards&&newCards.length){
+    newCards.forEach(function(c, ni){
+      var span=document.createElement('span');
+      span.style.cssText='display:inline-block;opacity:0;animation:commSlideIn .65s ease '+(ni*280)+'ms forwards;';
+      span.innerHTML=cH(c);
+      cc.appendChild(span);
+    });
+  }
+  // 残りの空スロット
+  var shown=existingCount+(newCards?newCards.length:0);
+  for(var j=shown;j<5;j++) cc.innerHTML+=cH(null);
+  var delay=newCards?(newCards.length*280+650):0;
+  setTimeout(function(){ if(cb) cb(); }, delay);
 }
 
 function showScreen(id){
