@@ -1379,13 +1379,20 @@ function startRound(){
   curBet=BB; lastRaise=BB; curIdx=nxt(bb); acts=[players[sb].idx];
   // ディール演出（自分のホール）
   var firstWaitFor=players[curIdx]?players[curIdx].pid:null;
-  if(myHole.length===2){
-    showDealOverlay(myHole, function(){
-      // advance()がCPUターンを自動処理するのでpushStateするだけ
+  function afterDeal(){
+    var firstP=players[curIdx];
+    if(isHost && firstP && firstP.isCpu && !firstP.folded && !firstP.allIn){
+      // 最初のターンがCPUの場合は直接起動
       pushState({waitFor:firstWaitFor});
-    });
+      runCpuTurn();
+    } else {
+      pushState({waitFor:firstWaitFor});
+    }
+  }
+  if(myHole.length===2){
+    showDealOverlay(myHole, function(){ afterDeal(); });
   } else {
-    pushState({waitFor:firstWaitFor});
+    afterDeal();
   }
 }
 
@@ -1560,6 +1567,7 @@ function nextPhase(){
       firstP=nextAct;
     }
     if(isHost && firstP.isCpu){
+      pushState({waitFor:firstP.pid});
       runCpuTurn();
     } else {
       pushState({waitFor:firstP.pid});
