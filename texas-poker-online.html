@@ -1449,52 +1449,47 @@ function applyAction(d){
 }
 
 function runCpuTurn(){
-  var savedIdx=curIdx;
-  var p=players[savedIdx];
+  var cpuIdx=curIdx;
+  var p=players[cpuIdx];
   if(!p||!p.isCpu||p.folded||p.allIn){ advance(); return; }
   showInfo(p.name+' が考えています...');
   renderAll();
+  var thinkTime=700+Math.floor(Math.random()*500);
   setTimeout(function(){
-    // savedIdx のCPUがまだアクション待ちか確認
-    var p2=players[savedIdx];
-    if(!p2||!p2.isCpu||p2.folded||p2.allIn||curIdx!==savedIdx){
-      // 既に別の処理が進んでいる → スキップ
-      return;
-    }
+    var p2=players[cpuIdx];
+    if(!p2||p2.folded||p2.allIn){advance();return;}
+    var dec;
     try{
-      var dec=cpuDecide(p2,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
-      if(dec.action==='fold'){ p2.folded=true; }
-      else if(dec.action==='check'){}
-      else if(dec.action==='call'){
-        var tc=Math.min(curBet-p2.bet,p2.chips);
-        p2.chips-=tc;p2.bet+=tc;p2.totalBet+=tc;pot+=tc;
-        if(p2.chips<=0){p2.chips=0;p2.allIn=true;}
-      }
-      else if(dec.action==='raise'){
-        var nb=snap5(Math.min(Math.max(dec.amount,curBet+BB),p2.chips+p2.bet));
-        var cost=nb-p2.bet;
-        if(cost<1){p2.folded=true;}
-        else{lastRaise=Math.max(nb-curBet,lastRaise);curBet=nb;p2.chips-=cost;p2.bet=nb;p2.totalBet+=cost;pot+=cost;if(p2.chips<=0){p2.chips=0;p2.allIn=true;}acts=[savedIdx];}
-      }
-      else if(dec.action==='allin'){
-        var allAmt=p2.chips;var nb2=p2.bet+allAmt;var raiseAmt2=nb2-curBet;
-        if(nb2>curBet){
-          var isFullRaise2=(raiseAmt2>=lastRaise);
-          lastRaise=Math.max(raiseAmt2,lastRaise);curBet=nb2;
-          if(isFullRaise2) acts=[savedIdx];
-        }
-        pot+=allAmt;p2.bet=nb2;p2.totalBet+=allAmt;p2.chips=0;p2.allIn=true;
-      }
-      if(acts.indexOf(savedIdx)<0) acts.push(savedIdx);
-      showActionBubble(savedIdx,dec.action,dec.amount||0);
-      renderAll();
-      pushState({lastAction:{playerIdx:savedIdx,action:dec.action,amount:dec.amount||0}});
-      advance();
-    }catch(e){
-      console.error('CPU error:',e);
-      advance();
+      dec=cpuDecide(p2,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
+    }catch(e){ dec={action:'fold'}; }
+    if(dec.action==='fold'){ p2.folded=true; }
+    else if(dec.action==='check'){}
+    else if(dec.action==='call'){
+      var tc=Math.min(curBet-p2.bet,p2.chips);
+      p2.chips-=tc;p2.bet+=tc;p2.totalBet+=tc;pot+=tc;
+      if(p2.chips<=0){p2.chips=0;p2.allIn=true;}
     }
-  }, 800+Math.random()*400);
+    else if(dec.action==='raise'){
+      var nb=snap5(Math.min(Math.max(dec.amount,curBet+BB),p2.chips+p2.bet));
+      var cost=nb-p2.bet;
+      if(cost<1){p2.folded=true;}
+      else{lastRaise=Math.max(nb-curBet,lastRaise);curBet=nb;p2.chips-=cost;p2.bet=nb;p2.totalBet+=cost;pot+=cost;if(p2.chips<=0){p2.chips=0;p2.allIn=true;}acts=[cpuIdx];}
+    }
+    else if(dec.action==='allin'){
+      var allAmt=p2.chips;var nb2=p2.bet+allAmt;var raiseAmt2=nb2-curBet;
+      if(nb2>curBet){
+        var isFullRaise2=(raiseAmt2>=lastRaise);
+        lastRaise=Math.max(raiseAmt2,lastRaise);curBet=nb2;
+        if(isFullRaise2) acts=[cpuIdx];
+      }
+      pot+=allAmt;p2.bet=nb2;p2.totalBet+=allAmt;p2.chips=0;p2.allIn=true;
+    }
+    if(acts.indexOf(cpuIdx)<0) acts.push(cpuIdx);
+    showActionBubble(cpuIdx,dec.action,dec.amount||0);
+    renderAll();
+    pushState({lastAction:{playerIdx:cpuIdx,action:dec.action,amount:dec.amount||0}});
+    advance();
+  }, thinkTime);
 }
 
 function advance(){
@@ -1521,6 +1516,8 @@ function advance(){
     nextPhase(); return;
   }
   if(isHost && curP.isCpu){
+    // 先にpushStateで状態をFirebaseに反映、その後CPUターン実行
+    pushState({waitFor:curP.pid});
     runCpuTurn();
   } else {
     pushState({waitFor:curP.pid});
