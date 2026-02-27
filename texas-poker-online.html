@@ -227,46 +227,44 @@ letter-spacing:6px;margin-bottom:6px;}
       <div class="slabel">ルームコード（タップでコピー）</div>
       <div class="code-big" id="code-disp">------</div>
       <div class="code-hint">このコードを対戦相手にシェア</div>
+      <div id="host-settings" style="display:none;margin-top:12px;padding:10px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(201,168,76,.2);">
+        <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold-light);letter-spacing:2px;margin-bottom:8px;">HOST SETTINGS</div>
+        <div class="row" style="margin-bottom:8px;">
+          <span style="font-size:12px;color:rgba(255,255,255,.5);">SB</span>
+          <input class="num-inp" id="room-sb" value="5" style="width:70px;">
+        </div>
+        <div class="row" style="margin-bottom:8px;">
+          <span style="font-size:12px;color:rgba(255,255,255,.5);">BB</span>
+          <input class="num-inp" id="room-bb" value="10" style="width:70px;">
+        </div>
+        <div class="row" style="margin-bottom:8px;">
+          <span style="font-size:12px;color:rgba(255,255,255,.5);">開始チップ</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input class="num-inp" id="host-chips" value="500" style="width:70px;">
+            <button id="btn-apply-chips" style="padding:5px 10px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:10px;cursor:pointer;touch-action:manipulation;">適用</button>
+          </div>
+        </div>
+        <div class="row" style="margin-bottom:8px;">
+          <span style="font-size:12px;color:rgba(255,255,255,.5);">CPU人数</span>
+          <div style="display:flex;gap:5px;" id="host-cpu-btns">
+            <button class="hcpu-btn" data-n="0" style="padding:4px 9px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">0</button>
+            <button class="hcpu-btn" data-n="1" style="padding:4px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">1</button>
+            <button class="hcpu-btn" data-n="2" style="padding:4px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">2</button>
+            <button class="hcpu-btn" data-n="3" style="padding:4px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">3</button>
+            <button class="hcpu-btn" data-n="4" style="padding:4px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">4</button>
+          </div>
+        </div>
+        <div class="row">
+          <span style="font-size:12px;color:rgba(255,255,255,.5);">難易度</span>
+          <div style="display:flex;gap:5px;" id="host-diff-btns">
+            <button class="hdiff-btn" data-d="easy" style="padding:4px 8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">EASY</button>
+            <button class="hdiff-btn" data-d="normal" style="padding:4px 8px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">NORMAL</button>
+            <button class="hdiff-btn" data-d="hard" style="padding:4px 8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">HARD</button>
+          </div>
+        </div>
+      </div>
 
 ```
-  <!-- ホスト専用設定（ルーム作成後） -->
-  <div id="host-settings" style="display:none;margin-top:12px;padding:10px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(201,168,76,.2);">
-    <div style="font-family:Cinzel,serif;font-size:10px;color:var(--gold-light);letter-spacing:2px;margin-bottom:8px;">HOST SETTINGS</div>
-    <div class="row" style="margin-bottom:8px;">
-      <span style="font-size:12px;color:rgba(255,255,255,.5);">SB</span>
-      <input class="num-inp" id="room-sb" value="5" style="width:70px;">
-    </div>
-    <div class="row" style="margin-bottom:8px;">
-      <span style="font-size:12px;color:rgba(255,255,255,.5);">BB</span>
-      <input class="num-inp" id="room-bb" value="10" style="width:70px;">
-    </div>
-    <div class="row" style="margin-bottom:8px;">
-      <span style="font-size:12px;color:rgba(255,255,255,.5);">開始チップ</span>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <input class="num-inp" id="host-chips" value="500" style="width:70px;">
-        <button id="btn-apply-chips" style="padding:5px 10px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:10px;cursor:pointer;touch-action:manipulation;">適用</button>
-      </div>
-    </div>
-    <div class="row" style="margin-bottom:8px;">
-      <span style="font-size:12px;color:rgba(255,255,255,.5);">CPU人数</span>
-      <div style="display:flex;gap:5px;" id="host-cpu-btns">
-        <button class="hcpu-btn" data-n="0" style="padding:4px 9px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">0</button>
-        <button class="hcpu-btn" data-n="1" style="padding:4px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">1</button>
-        <button class="hcpu-btn" data-n="2" style="padding:4px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">2</button>
-        <button class="hcpu-btn" data-n="3" style="padding:4px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">3</button>
-        <button class="hcpu-btn" data-n="4" style="padding:4px 9px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:11px;cursor:pointer;">4</button>
-      </div>
-    </div>
-    <div class="row">
-      <span style="font-size:12px;color:rgba(255,255,255,.5);">難易度</span>
-      <div style="display:flex;gap:5px;" id="host-diff-btns">
-        <button class="hdiff-btn" data-d="easy" style="padding:4px 8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">EASY</button>
-        <button class="hdiff-btn" data-d="normal" style="padding:4px 8px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:6px;color:var(--gold-light);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">NORMAL</button>
-        <button class="hdiff-btn" data-d="hard" style="padding:4px 8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-family:Cinzel,serif;font-size:10px;cursor:pointer;">HARD</button>
-      </div>
-    </div>
-  </div>
-
   <div class="slabel" style="margin-top:12px;">参加者</div>
   <div class="plist" id="plist"></div>
   <div id="room-msg" class="smsg s-info">参加者を待っています...</div>
