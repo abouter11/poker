@@ -1278,6 +1278,13 @@ function _launch(room){
 var _lastPhase=-1, _lastCommLen=0;
 function onState(st){
   if(!st) return;
+  // ホストは自身のメモリが正とする（Firebase経由で上書きしない）
+  // ただし画面描画と result/showdown は処理する
+  if(isHost){
+    if(st.showdown){handleSD(st.showdown);return;}
+    if(st.result){hideInfo();document.getElementById('ap').style.display='none';handleResult(st.result);return;}
+    return;
+  }
   var prevPhase=_lastPhase, prevCommLen=_lastCommLen;
   comm=st.comm||[]; pot=st.pot||0; phase=st.phase||0;
   curIdx=st.curIdx||0; curBet=st.curBet||0;
@@ -1293,7 +1300,7 @@ function onState(st){
   if(st.reveal) Object.keys(st.reveal).forEach(function(i){if(players[i])players[i].hole=st.reveal[i];});
   renderAll();
   // 非ホスト: フェーズ変化時にオーバーレイ表示
-  if(!isHost && phase>prevPhase && prevPhase>=0 && phase<=3){
+  if(phase>prevPhase && prevPhase>=0 && phase<=3){
     var newCards=comm.slice(prevCommLen);
     showPhaseOverlay(PNAMES[phase]||'', newCards, function(){});
   }
@@ -1348,6 +1355,7 @@ function pushState(extra){
 }
 
 function startRound(){
+  _cpuRunning=false;
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   // チップ不足で脱落判定（BBに届かない場合）
   players.forEach(function(p){
@@ -1431,16 +1439,26 @@ function applyAction(d){
   showActionBubble(d.playerIdx, d.action, d.amount||0);
 }
 
+var _cpuRunning=false;
 function runCpuTurn(){
+  // 二重起動防止
+  if(_cpuRunning) return;
   var p=players[curIdx];
-  if(!p||!p.isCpu) return;
+  if(!p||!p.isCpu||p.folded||p.allIn){ advance(); return; }
+  _cpuRunning=true;
   var savedIdx=curIdx;
-  // 非ホストにCPU思考中を通知
-  pushState({waitFor:'__cpu__'+curIdx, cpuName:p.name});
   showInfo(p.name+' が考えています...');
   renderAll();
-  showCpuThinking(p, function(){
+  // 非ホストにCPU思考中を通知（pushState はここのみ）
+  pushState({waitFor:'__cpu__'+curIdx, cpuName:p.name});
+  var thinkMs=600+Math.random()*600;
+  setTimeout(function(){
+    // タイムアウト中にゲーム状態が変わった場合のガード
+    if(curIdx!==savedIdx||!players[savedIdx]||!players[savedIdx].isCpu){
+      _cpuRunning=false; return;
+    }
     var dec=cpuDecide(p,{difficulty:cpuDifficulty,community:comm,pot:pot,curBet:curBet,phase:phase,BB:BB});
+    // アクション適用
     if(dec.action==='fold'){p.folded=true;}
     else if(dec.action==='check'){}
     else if(dec.action==='call'){
@@ -1466,12 +1484,13 @@ function runCpuTurn(){
       pot+=allAmt;p.bet=nb2;p.totalBet+=allAmt;p.chips=0;p.allIn=true;
     }
     if(acts.indexOf(savedIdx)<0) acts.push(savedIdx);
-    // アクション結果をpushStateで全員に通知（actionBubble情報を含む）
-    pushState({lastAction:{playerIdx:savedIdx,action:dec.action,amount:dec.amount||0}});
     showActionBubble(savedIdx, dec.action, dec.amount||0);
     renderAll();
-    setTimeout(function(){ advance(); }, 600);
-  });
+    // アクション結果をFirebaseに通知してから次のターンへ
+    pushState({lastAction:{playerIdx:savedIdx,action:dec.action,amount:dec.amount||0}});
+    _cpuRunning=false;
+    setTimeout(function(){ advance(); }, 400);
+  }, thinkMs);
 }
 
 function advance(){
