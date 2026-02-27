@@ -1418,7 +1418,8 @@ function _watchHostPresence(){
   // roomPath の status 変化でもバックアップとして検出
   fbListen(roomPath, function(room){
     if(!room) return;
-    if(room.status === 'lobby'){
+    // ゲーム開始後にstatus=lobbyに変化した場合のみホスト離脱
+    if(room.status === 'lobby' && _stateEverReceived){
       _hostWatchActive = false;
       if(!_hostLeftDetected && gamePath){
         _hostLeftDetected = true;
@@ -1464,16 +1465,24 @@ function _showHostLeft(){
 
 var _lastPhase=-1, _lastCommLen=0;
 var _hostLeftDetected = false;
+var _stateEverReceived = false; // 有効なstateを一度でも受け取ったか
+var _nullStateCount = 0;        // 連続null回数
 function onState(st){
   if(isHost) return;
-  // st===null = ホストがgame stateを消去して退出した
   if(!st){
-    if(!_hostLeftDetected && gamePath){
+    // ゲーム開始前（stateを一度も受け取っていない）はnullを無視
+    if(!_stateEverReceived) return;
+    // 連続null3回で初めてホスト離脱とみなす
+    _nullStateCount++;
+    if(!_hostLeftDetected && gamePath && _nullStateCount >= 3){
       _hostLeftDetected = true;
       _showHostLeft();
     }
     return;
   }
+  // 有効なstateを受け取ったのでフラグをセット、nullカウントリセット
+  _stateEverReceived = true;
+  _nullStateCount = 0;
   var prevPhase=_lastPhase, prevCommLen=_lastCommLen;
   comm=st.comm||[]; pot=st.pot||0; phase=st.phase||0;
   curIdx=st.curIdx||0; curBet=st.curBet||0;
@@ -2336,6 +2345,8 @@ window._pokerGoLobby = function(){
   // 状態リセット
   _hostWatchActive=false;
   _hostLeftDetected=false;
+  _stateEverReceived=false;
+  _nullStateCount=0;
   gamePath=''; holePfx=''; roomPath=''; isHost=false;
   offlineMode=false;
   players=[]; myHole=[]; _initialChips=0;
