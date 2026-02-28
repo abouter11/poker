@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.08</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.09</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1428,6 +1428,7 @@ function _launch(room){
     if(players[myIdx]) players[myIdx].hole=h;
     renderAll();
     // 新しいホールカード受信時のみディール演出
+    _dbg('hole isNew='+isNew+' isHost='+isHost);
     if(isNew && !isHost){
       // hole受信 = ゲーム開始確定 → 「ホスト待ち」メッセージを更新
       showInfo('ゲーム開始中...');
@@ -2222,6 +2223,7 @@ function handleResult(rr){
 // アクションUI
 // ════════════════════════════════════════
 function renderAction(){
+  _dbg('renderAction myIdx='+myIdx);
   hideInfo(); // CPU思考中表示を確実にクリア
   var p=players[myIdx];if(!p)return;
   document.getElementById('ap-who').textContent=p.name+' のターン（あなた）';
@@ -2343,7 +2345,7 @@ function renderAll(){
   document.getElementById('pot').innerHTML='<span style="opacity:.6;font-size:10px">POT </span>'+chipsHTML(pot);
   document.getElementById('phase').textContent=PNAMES[Math.min(phase,4)]||'SHOWDOWN';
 }
-function showInfo(m){document.getElementById('ibar').classList.add('show');document.getElementById('ibar-t').textContent=m;}
+function showInfo(m){_dbg('showInfo:'+m.substring(0,25));document.getElementById('ibar').classList.add('show');document.getElementById('ibar-t').textContent=m;}
 function hideInfo(){document.getElementById('ibar').classList.remove('show');}
 function showMsg(title,body,lbl,fn,ch,commCards){
   document.getElementById('mover').classList.add('show');
