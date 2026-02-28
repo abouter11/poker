@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.15</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.17</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1382,6 +1382,7 @@ var gamePath='', holePfx='';
 var PNAMES=['PRE-FLOP','FLOP','TURN','RIVER','SHOWDOWN'];
 var _allInRevealed=false; // ALL IN時のホール公開フラグ
 var _dealOverlayShown=false; // ラウンドごとのdealOverlay表示済みフラグ
+var _roundId=''; // ラウンドごとのユニークID（actionの古さ判定用）
 
 function launchGame(room){
   fbOff(roomPath);
@@ -1609,7 +1610,8 @@ function watchAction(){
   fbOff(gamePath+'/action');
   fbListen(gamePath+'/action', function(d){
     if(!d||!d.ts||d.ts<=lastActTs) return;  // null・古いts・同じtsをすべてスキップ
-    _dbg('ACTION ts='+d.ts+' last='+lastActTs);
+    if(d.rid && d.rid!==_roundId) return;  // 別ラウンドのactionをスキップ
+    _dbg('ACTION rid='+d.rid+' cur='+_roundId);
     lastActTs=d.ts; curIdx=d.playerIdx;
     applyAction(d); renderAll(); advance();
   });
@@ -1648,10 +1650,15 @@ function startRound(){
   _allInRevealed=false;
   _dealOverlayShown=false; // 新ラウンドでdealOverlayを再度表示可能に
   _commAnimating=false;
-  // lastActTsを現在時刻にセット → 古いactionデータを確実にスキップ
+  // ラウンドIDを生成（古いactionを確実に区別する）
+  _roundId = Math.random().toString(36).slice(2);
   lastActTs=Date.now();
-  // watchActionをここで(再)登録 → lastActTs設定後なので古いデータは無視される
-  watchAction();
+  _dbg('roundId='+_roundId);
+  // actionパスをnullクリアしてからwatchActionを登録
+  fbOff(gamePath+'/action');
+  fbSet(gamePath+'/action', null, function(){
+    watchAction();
+  });
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   // eliminatedフラグ済みのプレイヤーのみ非アクティブ
   // (checkEliminated → startRound の順で呼ばれるので
@@ -2275,7 +2282,7 @@ function renderAction(){
 function send(action,amount){
   if(offlineMode){sendOffline(action,amount);return;}
   document.getElementById('ap').style.display='none';
-  var d={playerIdx:myIdx,action:action,amount:amount,ts:Date.now()};
+  var d={playerIdx:myIdx,action:action,amount:amount,ts:Date.now(),rid:_roundId};
   if(isHost){
     // ホストは直接処理（Firebase送信なし）→「送信中...」不要
     hideInfo();
