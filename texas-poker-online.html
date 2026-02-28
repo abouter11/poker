@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.17</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.18</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -427,17 +427,22 @@ function fbPatch(path, val, cb){
     xhr.send(JSON.stringify(val));
   } catch(e){ if(cb) setTimeout(cb,0); }
 }
-function fbListen(path, cb){
+function fbListen(path, cb, skipInitial){
   if(offlineMode){ return; }
   if(!_polls[path]) _polls[path] = {last:null, cbs:[], timer:null};
   _polls[path].cbs.push(cb);
-  fbGet(path, function(d){
-    _polls[path].last = JSON.stringify(d);
-    cb(d);
-  });
+  if(!skipInitial){
+    fbGet(path, function(d){
+      if(!_polls[path]) return;
+      _polls[path].last = JSON.stringify(d);
+      cb(d);
+    });
+  }
   if(!_polls[path].timer){
     _polls[path].timer = setInterval(function(){
+      if(!_polls[path]) return;
       fbGet(path, function(d){
+        if(!_polls[path]) return;
         var j = JSON.stringify(d);
         if(j !== _polls[path].last){
           _polls[path].last = j;
@@ -1608,13 +1613,17 @@ function watchAction(){
   // actionパスのポーリングを停止してから再登録（古いリスナーをクリア）
   _dbg('watchAction reg lastTs='+lastActTs);
   fbOff(gamePath+'/action');
+  // skipInitial=true: 初回の即時コールバックをスキップし古いデータを無視
   fbListen(gamePath+'/action', function(d){
-    if(!d||!d.ts||d.ts<=lastActTs) return;  // null・古いts・同じtsをすべてスキップ
-    if(d.rid && d.rid!==_roundId) return;  // 別ラウンドのactionをスキップ
-    _dbg('ACTION rid='+d.rid+' cur='+_roundId);
+    if(!d||!d.ts||d.ts<=lastActTs) return;
+    if(d.rid && d.rid!==_roundId){
+      _dbg('skip old rid='+d.rid);
+      return;
+    }
+    _dbg('ACTION ok rid='+d.rid);
     lastActTs=d.ts; curIdx=d.playerIdx;
     applyAction(d); renderAll(); advance();
-  });
+  }, true);
 }
 
 function pushState(extra){
