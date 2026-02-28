@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.04</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.05</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1610,7 +1610,10 @@ function pushState(extra){
     showdown:null,result:null,reveal:null,waitFor:null
   };
   if(extra) Object.keys(extra).forEach(function(k){st[k]=extra[k];});
-  fbSet(gamePath+'/state', st);
+  _dbg('pushState path='+gamePath+' wf='+(st.waitFor||'null'));
+  fbSet(gamePath+'/state', st, function(){
+    _dbg('fbSet OK wf='+(st.waitFor||'null'));
+  });
   // ホストは自分でonStateを呼ばないが、showdown/resultはローカルで処理
   if(isHost){
     if(st.showdown) handleSD(st.showdown);
