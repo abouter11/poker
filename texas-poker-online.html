@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.06</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.07</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1417,8 +1417,9 @@ function _launch(room){
   // ホストはstateを自分で管理するのでListenしない
   // 非ホストのみstateをListenしてゲーム状態を同期する
   if(!isHost){
-    _dbg('listen: '+gamePath+'/state');
-    fbListen(gamePath+'/state', onState);
+    var _lpath=gamePath+'/state';
+    _dbg('LISTEN: '+_lpath);
+    fbListen(_lpath, onState);
   }
   fbListen(holePfx+myId, function(h){
     if(!h||h.length!==2) return;
@@ -1506,13 +1507,15 @@ var _hostLeftDetected = false;
 var _stateEverReceived = false; // 有効なstateを一度でも受け取ったか
 var _nullStateCount = 0;        // 連続null回数
 function _dbg(msg){
-  // デバッグ: 画面右上に一時表示（3秒後消える）
   var d=document.getElementById('_dbgbox');
   if(!d){d=document.createElement('div');d.id='_dbgbox';
-    d.style.cssText='position:fixed;top:60px;right:8px;z-index:9999;background:rgba(0,0,0,.8);color:#0f0;font-size:9px;font-family:monospace;padding:4px 6px;border-radius:4px;max-width:200px;word-break:break-all;';
+    d.style.cssText='position:fixed;top:50px;right:4px;z-index:9999;background:rgba(0,0,0,.85);color:#0f0;font-size:8px;font-family:monospace;padding:4px 6px;border-radius:4px;max-width:220px;word-break:break-all;line-height:1.4;';
     document.body.appendChild(d);}
-  d.textContent=msg;
-  clearTimeout(d._t);d._t=setTimeout(function(){d.textContent='';},4000);
+  // 最新5行を保持
+  var lines=(d.textContent||'').split('\n').filter(Boolean);
+  lines.push(msg);
+  if(lines.length>5) lines=lines.slice(-5);
+  d.textContent=lines.join('\n');
 }
 function onState(st){
   if(isHost) return;
@@ -1613,9 +1616,12 @@ function pushState(extra){
     showdown:null,result:null,reveal:null,waitFor:null
   };
   if(extra) Object.keys(extra).forEach(function(k){st[k]=extra[k];});
-  _dbg('pushState path='+gamePath+' wf='+(st.waitFor||'null'));
-  fbSet(gamePath+'/state', st, function(){
-    _dbg('fbSet OK wf='+(st.waitFor||'null'));
+  var _wf=st.waitFor||'null';
+  var _path=gamePath+'/state';
+  _dbg('PUSH '+_path);
+  _dbg('wf='+_wf);
+  fbSet(_path, st, function(){
+    _dbg('OK wf='+_wf);
   });
   // ホストは自分でonStateを呼ばないが、showdown/resultはローカルで処理
   if(isHost){
