@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.10</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.11</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1442,7 +1442,7 @@ function _launch(room){
       });
     }
   });
-  if(isHost){ watchAction(); startRound(); }
+  if(isHost){ lastActTs=Date.now(); watchAction(); startRound(); }
   else {
     showInfo('ホストのゲーム開始を待っています...');
     // 非ホスト: ホスト離脚監視
@@ -1605,8 +1605,11 @@ function onState(st){
 }
 
 function watchAction(){
+  // actionパスのポーリングを停止してから再登録（古いリスナーをクリア）
+  fbOff(gamePath+'/action');
   fbListen(gamePath+'/action', function(d){
     if(!d||!d.ts||d.ts<=lastActTs) return;  // null・古いts・同じtsをすべてスキップ
+    _dbg('ACTION ts='+d.ts+' lastTs='+lastActTs);
     lastActTs=d.ts; curIdx=d.playerIdx;
     applyAction(d); renderAll(); advance();
   });
@@ -1640,12 +1643,12 @@ function pushState(extra){
 }
 
 function startRound(){
+  _dbg('startRound called');
   _cpuQueue=[];_cpuBusy=false;
   _allInRevealed=false;
   _commAnimating=false;
-  // 前ラウンドのactionデータをFirebaseからクリア（watchActionの誤検知防止）
+  // lastActTsを現在時刻にセット → 古いactionデータを確実にスキップ
   lastActTs=Date.now();
-  fbSet(gamePath+'/action', null);
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   // eliminatedフラグ済みのプレイヤーのみ非アクティブ
   // (checkEliminated → startRound の順で呼ばれるので
@@ -2202,6 +2205,7 @@ function handleSD(sd){
   },sd.ch||'',sd.comm||comm);
 }
 function handleResult(rr){
+  _dbg('handleResult gt='+rr.gameOver);
   if(!rr||!rr.title)return;
   renderAll();
   if(rr.gameOver){
