@@ -193,6 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.01</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1821,7 +1822,12 @@ function advance(){
     runCpuTurn(curP.idx);
   } else {
     pushState({waitFor:curP.pid});
-    if(curP.isMe){ hideInfo(); } // 自分のターン→思考中表示を消す
+    if(curP.isMe){
+      hideInfo();
+    } else {
+      // ホスト側: 非ホスト人間のターン → 待機メッセージ表示
+      showInfo(curP.name + ' のアクションを待っています...');
+    }
   }
 }
 
@@ -2229,10 +2235,15 @@ function renderAction(){
 function send(action,amount){
   if(offlineMode){sendOffline(action,amount);return;}
   document.getElementById('ap').style.display='none';
-  showInfo('送信中...');
   var d={playerIdx:myIdx,action:action,amount:amount,ts:Date.now()};
-  if(isHost){lastActTs=d.ts;applyAction(d);renderAll();advance();}
-  else fbSet(gamePath+'/action',d);
+  if(isHost){
+    // ホストは直接処理（Firebase送信なし）→「送信中...」不要
+    hideInfo();
+    lastActTs=d.ts;applyAction(d);renderAll();advance();
+  } else {
+    showInfo('送信中...');
+    fbSet(gamePath+'/action',d);
+  }
 }
 
 // ════════════════════════════════════════
