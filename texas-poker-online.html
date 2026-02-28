@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.12</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.15</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -304,7 +304,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
       <div class="plist" id="plist"></div>
       <div id="room-msg" class="smsg s-info">参加者を待っています...</div>
       <button class="btn" id="btn-start" disabled style="display:none;">ゲーム開始</button>
-      <button class="btn" id="btn-ready" style="display:none;background:rgba(0,100,0,.4);border-color:rgba(0,255,0,.3);">準備完了</button>
+      <button class="btn" id="btn-ready" style="display:none;background:rgba(201,168,76,.25);border-color:rgba(201,168,76,.5);">準備完了</button>
     </div>
   </div>
   <div class="panel">
@@ -765,7 +765,7 @@ document.getElementById('btn-ready').addEventListener('click', function(){
   var patch={}; patch[myId]=true;
   fbPatch(roomPath+'/ready', patch, function(){
     document.getElementById('btn-ready').textContent='✓ 準備完了';
-    document.getElementById('btn-ready').style.background='rgba(0,150,0,.6)';
+    document.getElementById('btn-ready').style.background='rgba(201,168,76,.6)';document.getElementById('btn-ready').style.borderColor='rgba(201,168,76,.9)';
     document.getElementById('btn-ready').disabled=true;
   });
 });
@@ -1259,11 +1259,11 @@ function watchLobby(){
       var myReady=room.ready&&room.ready[myId];
       if(myReady){
         readyBtn.textContent='✓ 準備完了';
-        readyBtn.style.background='rgba(0,150,0,.6)';
+        readyBtn.style.background='rgba(201,168,76,.6)';readyBtn.style.borderColor='rgba(201,168,76,.9)';
         readyBtn.disabled=true;
       } else {
         readyBtn.textContent='準備完了';
-        readyBtn.style.background='rgba(0,100,0,.4)';
+        readyBtn.style.background='rgba(201,168,76,.25)';readyBtn.style.borderColor='rgba(201,168,76,.5)';
         readyBtn.disabled=false;
       }
       rmsg.textContent=Object.keys(ps).length+'人参加中'+(room.cpuCount>0?' + CPU×'+room.cpuCount:'');
@@ -1381,6 +1381,7 @@ var dealerIdx=0, curIdx=0, myHole=[], lastActTs=0;
 var gamePath='', holePfx='';
 var PNAMES=['PRE-FLOP','FLOP','TURN','RIVER','SHOWDOWN'];
 var _allInRevealed=false; // ALL IN時のホール公開フラグ
+var _dealOverlayShown=false; // ラウンドごとのdealOverlay表示済みフラグ
 
 function launchGame(room){
   fbOff(roomPath);
@@ -1428,22 +1429,19 @@ function _launch(room){
     myHole=h;
     if(players[myIdx]) players[myIdx].hole=h;
     renderAll();
-    // 新しいホールカード受信時のみディール演出
-    _dbg('hole isNew='+isNew+' isHost='+isHost);
-    if(isNew && !isHost){
-      // hole受信 = ゲーム開始確定 → 「ホスト待ち」メッセージを更新
+    _dbg('hole isNew='+isNew+' shown='+_dealOverlayShown);
+    // 新しいホールカード かつ 非ホスト かつ まだこのラウンドでoverlay未表示
+    if(isNew && !isHost && !_dealOverlayShown){
+      _dealOverlayShown=true;
       showInfo('ゲーム開始中...');
       showDealOverlay(myHole, function(){
-        // dealOverlay終了後: 必ずibarクリア
         hideInfo();
-        // apが既に表示済み（onStateでwaitFor===myId受信済み）ならrenderAction再実行
         var apEl=document.getElementById('ap');
         if(apEl.style.display==='block'){ renderAction(); }
-        // まだonStateが来ていない場合は、次のonStateで処理される
       });
     }
   });
-  if(isHost){ lastActTs=Date.now(); watchAction(); startRound(); }
+  if(isHost){ startRound(); }
   else {
     showInfo('ホストのゲーム開始を待っています...');
     // 非ホスト: ホスト離脚監視
@@ -1648,9 +1646,12 @@ function startRound(){
   _dbg('startRound called');
   _cpuQueue=[];_cpuBusy=false;
   _allInRevealed=false;
+  _dealOverlayShown=false; // 新ラウンドでdealOverlayを再度表示可能に
   _commAnimating=false;
   // lastActTsを現在時刻にセット → 古いactionデータを確実にスキップ
   lastActTs=Date.now();
+  // watchActionをここで(再)登録 → lastActTs設定後なので古いデータは無視される
+  watchAction();
   deck=shuffle(makeDeck());comm=[];pot=0;phase=0;curBet=0;lastRaise=BB;acts=[];
   // eliminatedフラグ済みのプレイヤーのみ非アクティブ
   // (checkEliminated → startRound の順で呼ばれるので
