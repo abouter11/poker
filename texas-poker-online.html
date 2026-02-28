@@ -1639,10 +1639,14 @@ function startRound(){
   var sb=nxt(dealerIdx), bb=nxt(sb);
   blind(players[sb],SB); blind(players[bb],BB);
   curBet=BB; lastRaise=BB; curIdx=nxt(bb); acts=[players[sb].idx];
-  // ディール演出（自分のホール）
   var firstWaitFor=players[curIdx]?players[curIdx].pid:null;
+  var firstP=players[curIdx];
+
+  // ディール演出前に初期stateをpush → 非ホストが即座にゲーム状態を受け取れる
+  // waitForは後で上書きするのでnullで一旦送信（ブラインド・チップ状態を伝達）
+  pushState({waitFor:null});
+
   function afterDeal(){
-    var firstP=players[curIdx];
     if(isHost && firstP && firstP.isCpu && !firstP.folded && !firstP.allIn){
       curIdx=firstP.idx;
       pushState({waitFor:firstWaitFor});
