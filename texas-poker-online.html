@@ -1425,7 +1425,12 @@ function _launch(room){
     renderAll();
     // 新しいホールカード受信時のみディール演出
     if(isNew && !isHost){
-      showDealOverlay(myHole, function(){});
+      showDealOverlay(myHole, function(){
+        // dealOverlay終了後: ibarをクリアし、apが既に表示済みならrenderActionを再実行
+        hideInfo();
+        var apEl=document.getElementById('ap');
+        if(apEl.style.display==='block'){ renderAction(); }
+      });
     }
   });
   if(isHost){ watchAction(); startRound(); }
@@ -1555,7 +1560,12 @@ function onState(st){
     showActionBubble(la.playerIdx, la.action, la.amount);
   }
   if(st.waitFor===myId){
-    hideInfo(); renderAction();
+    hideInfo();
+    // dealOverlay表示中なら renderAction はdealOverlay終了コールバックに任せる
+    var dealOv=document.getElementById('deal-overlay');
+    if(!dealOv||!dealOv.classList.contains('show')){
+      renderAction();
+    }
   } else if(st.waitFor){
     var curP=players[curIdx];
     if(curP&&curP.isCpu){
