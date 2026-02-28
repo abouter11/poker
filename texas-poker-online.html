@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.03</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.04</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1668,19 +1668,22 @@ function startRound(){
   var firstWaitFor=players[curIdx]?players[curIdx].pid:null;
   var firstP=players[curIdx];
 
-  function afterDeal(){
-    if(isHost && firstP && firstP.isCpu && !firstP.folded && !firstP.allIn){
-      curIdx=firstP.idx;
-      pushState({waitFor:firstWaitFor});
-      runCpuTurn(firstP.idx);
+  // まずpushStateで非ホストに状態を伝達（dealOverlay前に実行）
+  if(isHost && firstP && firstP.isCpu && !firstP.folded && !firstP.allIn){
+    curIdx=firstP.idx;
+    pushState({waitFor:firstWaitFor});
+    // ホストのdeal演出後にCPUターン開始
+    if(myHole.length===2){
+      showDealOverlay(myHole, function(){ runCpuTurn(firstP.idx); });
     } else {
-      pushState({waitFor:firstWaitFor});
+      runCpuTurn(firstP.idx);
     }
-  }
-  if(myHole.length===2){
-    showDealOverlay(myHole, function(){ afterDeal(); });
   } else {
-    afterDeal();
+    pushState({waitFor:firstWaitFor});
+    // ホストのdeal演出（pushState後なので非ホストは既にstate受信可能）
+    if(myHole.length===2){
+      showDealOverlay(myHole, function(){});
+    }
   }
 }
 
