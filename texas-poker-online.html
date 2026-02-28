@@ -964,7 +964,7 @@ function startRoundOffline(){
   players.forEach(function(p){ p.chipsBefore=p.chips; });
   var sb=nxt(dealerIdx),bb=nxt(sb);
   blind(players[sb],SB);blind(players[bb],BB);
-  curBet=BB;lastRaise=BB;curIdx=nxt(bb);acts=[players[sb].idx];
+  curBet=BB;lastRaise=BB;curIdx=nxt(bb);acts=[players[bb].idx];
   renderAll();
   // 自分の手札をディール演出で表示してからゲーム開始
   if(myPlayer && myHole.length===2){
@@ -1412,7 +1412,7 @@ function _launch(room){
   holePfx  = roomPath+'/holes/';
   if(!_initialChips) _initialChips = arr[0]?arr[0].chips:500;
   showScreen('screen-game');
-  document.getElementById('back-btn-wrap').style.display='block';
+  document.getElementById('back-btn-wrap').style.display='none'; // ラウンド終了モーダル時のみ表示
   // ホストはstateを自分で管理するのでListenしない
   // 非ホストのみstateをListenしてゲーム状態を同期する
   if(!isHost) fbListen(gamePath+'/state', onState);
@@ -1574,7 +1574,12 @@ function onState(st){
       showInfo((curP?curP.name:'?')+'のアクションを待っています...');
     }
   } else {
-    hideInfo();
+    // waitFor:null = ラウンド開始準備中または次アクション待ち
+    // 「ホストのゲーム開始を待っています...」より適切なメッセージに更新
+    if(_stateEverReceived){
+      hideInfo();
+    }
+    // 初回state受信前はibarをそのまま（launchGame側で設定済み）
   }
 }
 
@@ -1648,13 +1653,9 @@ function startRound(){
   players.forEach(function(p){ p.chipsBefore=p.chips; });
   var sb=nxt(dealerIdx), bb=nxt(sb);
   blind(players[sb],SB); blind(players[bb],BB);
-  curBet=BB; lastRaise=BB; curIdx=nxt(bb); acts=[players[sb].idx];
+  curBet=BB; lastRaise=BB; curIdx=nxt(bb); acts=[players[bb].idx];
   var firstWaitFor=players[curIdx]?players[curIdx].pid:null;
   var firstP=players[curIdx];
-
-  // ディール演出前に初期stateをpush → 非ホストが即座にゲーム状態を受け取れる
-  // waitForは後で上書きするのでnullで一旦送信（ブラインド・チップ状態を伝達）
-  pushState({waitFor:null});
 
   function afterDeal(){
     if(isHost && firstP && firstP.isCpu && !firstP.folded && !firstP.allIn){
@@ -2307,6 +2308,8 @@ function showInfo(m){document.getElementById('ibar').classList.add('show');docum
 function hideInfo(){document.getElementById('ibar').classList.remove('show');}
 function showMsg(title,body,lbl,fn,ch,commCards){
   document.getElementById('mover').classList.add('show');
+  // オンライン: ラウンド終了モーダル表示中のみロビーボタンを有効化
+  if(gamePath) document.getElementById('back-btn-wrap').style.display='block';
   document.getElementById('mtitle').textContent=title;
   document.getElementById('mbody').innerHTML=body;
   document.getElementById('mcards').innerHTML=ch||'';
@@ -2321,7 +2324,12 @@ function showMsg(title,body,lbl,fn,ch,commCards){
     mcomm.innerHTML='';
   }
   var btn=document.getElementById('mnext');btn.textContent=lbl;
-  btn.onclick=function(){document.getElementById('mover').classList.remove('show');fn();};
+  btn.onclick=function(){
+    document.getElementById('mover').classList.remove('show');
+    // オンライン: モーダルが閉じたらロビーボタンを非表示に戻す
+    if(gamePath) document.getElementById('back-btn-wrap').style.display='none';
+    fn();
+  };
 }
 
 
