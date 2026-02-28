@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.11</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.12</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1392,6 +1392,7 @@ function launchGame(room){
 }
 
 function _launch(room){
+  _dbg('_launch isHost='+isHost);
   if(!room) return;
   SB=room.SB; BB=room.BB;
   var seats=room.seats||{};
@@ -1606,10 +1607,11 @@ function onState(st){
 
 function watchAction(){
   // actionパスのポーリングを停止してから再登録（古いリスナーをクリア）
+  _dbg('watchAction reg lastTs='+lastActTs);
   fbOff(gamePath+'/action');
   fbListen(gamePath+'/action', function(d){
     if(!d||!d.ts||d.ts<=lastActTs) return;  // null・古いts・同じtsをすべてスキップ
-    _dbg('ACTION ts='+d.ts+' lastTs='+lastActTs);
+    _dbg('ACTION ts='+d.ts+' last='+lastActTs);
     lastActTs=d.ts; curIdx=d.playerIdx;
     applyAction(d); renderAll(); advance();
   });
@@ -1625,8 +1627,8 @@ function pushState(extra){
   if(extra) Object.keys(extra).forEach(function(k){st[k]=extra[k];});
   var _wf=st.waitFor||'null';
   var _path=gamePath+'/state';
-  _dbg('PUSH '+_path);
-  _dbg('wf='+_wf);
+  window._pushCount=(window._pushCount||0)+1;
+  _dbg('PUSH#'+window._pushCount+' wf='+_wf.substring(0,8));
   fbSet(_path, st, function(){
     _dbg('OK wf='+_wf);
   });
