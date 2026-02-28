@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.20</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.23</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -445,11 +445,12 @@ function fbListen(path, cb, skipInitial){
         if(!_polls[path]) return;
         var j = JSON.stringify(d);
         if(j !== _polls[path].last){
+          // nullへの変化は記録するがコールバックも呼ぶ（onState側でハンドリング）
           _polls[path].last = j;
           _polls[path].cbs.forEach(function(fn){ fn(d); });
         }
       });
-    }, 1500);
+    }, 800);
   }
 }
 function fbOff(path){
@@ -1158,7 +1159,9 @@ function sendOffline(action,amount){
   advanceOffline();
 }
 
-var myId = Math.random().toString(36).substr(2,10);
+// myIdをsessionStorageで管理（リロードしても同じタブ内では同じID）
+var myId = sessionStorage.getItem('poker_myId');
+if(!myId){ myId = Math.random().toString(36).substr(2,10); sessionStorage.setItem('poker_myId', myId); }
 var myName='', myChips=1000, SB=10, BB=20;
 var roomPath='', isHost=false, myIdx=-1;
 
@@ -1399,7 +1402,7 @@ function launchGame(room){
 }
 
 function _launch(room){
-  _dbg('_launch isHost='+isHost);
+  _dbg('_launch isHost='+isHost+' myId='+myId.substring(0,6));
   if(!room) return;
   SB=room.SB; BB=room.BB;
   var seats=room.seats||{};
@@ -1417,6 +1420,7 @@ function _launch(room){
     players.push({name:CPU_NAMES[ci],chips:arr[0]?arr[0].chips:500,pid:'cpu'+ci,isMe:false,idx:idx,isCpu:true,
                   hole:[],bet:0,totalBet:0,folded:false,allIn:false,active:true,rebuyCount:0});
   }
+  _dbg('myIdx='+myIdx+' myId='+myId.substring(0,6));
   gamePath = roomPath+'/game';
   holePfx  = roomPath+'/holes/';
   if(!_initialChips) _initialChips = arr[0]?arr[0].chips:500;
@@ -1528,12 +1532,14 @@ function onState(st){
   if(isHost) return;
   _dbg('path='+gamePath+'/state\n'+(st?'wf='+st.waitFor:'NULL'));
   if(!st){
-    // ゲーム開始前（stateを一度も受け取っていない）はnullを無視
+    // NULLはFirebase書き込み中のpolling競合で発生する場合がある
+    // ゲーム開始前はnullを無視
     if(!_stateEverReceived) return;
-    // 連続null3回で初めてホスト離脱とみなす
+    // ゲーム中のNULLは一時的な競合なので無視（最後の有効なstateを維持）
     _nullStateCount++;
-    _dbg('NULL cnt='+_nullStateCount);
-    if(!_hostLeftDetected && gamePath && _nullStateCount >= 10){
+    _dbg('NULL cnt='+_nullStateCount+' (ignored)');
+    // 長時間NULLが続く場合のみホスト離脱と判断（30回≒45秒）
+    if(!_hostLeftDetected && gamePath && _nullStateCount >= 30){
       _hostLeftDetected = true;
       _showHostLeft();
     }
@@ -1588,10 +1594,10 @@ function onState(st){
     var la=st.lastAction;
     showActionBubble(la.playerIdx, la.action, la.amount);
   }
+  _dbg('wf='+st.waitFor+' myId='+myId+' match='+(st.waitFor===myId));
   if(st.waitFor===myId){
     hideInfo();
-    _dbg('→ renderAction() myId='+myId);
-    renderAction(); // 常に呼ぶ（dealOverlay表示中でもapは準備しておく）
+    renderAction();
   } else if(st.waitFor){
     var curP=players[curIdx];
     if(curP&&curP.isCpu){
