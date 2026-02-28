@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.07</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.08</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1469,6 +1469,7 @@ function _watchHostPresence(){
 }
 
 function _showHostLeft(){
+  _dbg('HOST LEFT DETECTED');
   // 既にロビーにいる場合はスキップ
   if(!gamePath && !roomPath) return;
   // ibarやモーダルをクリア
@@ -1525,7 +1526,8 @@ function onState(st){
     if(!_stateEverReceived) return;
     // 連続null3回で初めてホスト離脱とみなす
     _nullStateCount++;
-    if(!_hostLeftDetected && gamePath && _nullStateCount >= 3){
+    _dbg('NULL cnt='+_nullStateCount);
+    if(!_hostLeftDetected && gamePath && _nullStateCount >= 10){
       _hostLeftDetected = true;
       _showHostLeft();
     }
@@ -1534,6 +1536,7 @@ function onState(st){
   // 有効なstateを受け取ったのでフラグをセット、nullカウントリセット
   _stateEverReceived = true;
   _nullStateCount = 0;
+  _dbg('STATE wf='+(st.waitFor||'null')+' pot='+st.pot);
   var prevPhase=_lastPhase, prevCommLen=_lastCommLen;
   comm=st.comm||[]; pot=st.pot||0; phase=st.phase||0;
   curIdx=st.curIdx||0; curBet=st.curBet||0;
