@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.01</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.02</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1417,7 +1417,6 @@ function _launch(room){
   // ホストはstateを自分で管理するのでListenしない
   // 非ホストのみstateをListenしてゲーム状態を同期する
   if(!isHost) fbListen(gamePath+'/state', onState);
-  var _dealShown=false;
   fbListen(holePfx+myId, function(h){
     if(!h||h.length!==2) return;
     var isNew=(JSON.stringify(h)!==JSON.stringify(myHole));
@@ -1426,18 +1425,22 @@ function _launch(room){
     renderAll();
     // 新しいホールカード受信時のみディール演出
     if(isNew && !isHost){
+      // hole受信 = ゲーム開始確定 → 「ホスト待ち」メッセージを更新
+      showInfo('ゲーム開始中...');
       showDealOverlay(myHole, function(){
-        // dealOverlay終了後: ibarをクリアし、apが既に表示済みならrenderActionを再実行
+        // dealOverlay終了後: 必ずibarクリア
         hideInfo();
+        // apが既に表示済み（onStateでwaitFor===myId受信済み）ならrenderAction再実行
         var apEl=document.getElementById('ap');
         if(apEl.style.display==='block'){ renderAction(); }
+        // まだonStateが来ていない場合は、次のonStateで処理される
       });
     }
   });
   if(isHost){ watchAction(); startRound(); }
   else {
     showInfo('ホストのゲーム開始を待っています...');
-    // 非ホスト: ホスト離脱監視
+    // 非ホスト: ホスト離脚監視
     _watchHostPresence();
   }
 }
