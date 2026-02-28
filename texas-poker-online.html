@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.02</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.03</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1502,8 +1502,18 @@ var _lastPhase=-1, _lastCommLen=0;
 var _hostLeftDetected = false;
 var _stateEverReceived = false; // 有効なstateを一度でも受け取ったか
 var _nullStateCount = 0;        // 連続null回数
+function _dbg(msg){
+  // デバッグ: 画面右上に一時表示（3秒後消える）
+  var d=document.getElementById('_dbgbox');
+  if(!d){d=document.createElement('div');d.id='_dbgbox';
+    d.style.cssText='position:fixed;top:60px;right:8px;z-index:9999;background:rgba(0,0,0,.8);color:#0f0;font-size:9px;font-family:monospace;padding:4px 6px;border-radius:4px;max-width:200px;word-break:break-all;';
+    document.body.appendChild(d);}
+  d.textContent=msg;
+  clearTimeout(d._t);d._t=setTimeout(function(){d.textContent='';},4000);
+}
 function onState(st){
   if(isHost) return;
+  _dbg('onState: '+(st?'waitFor='+st.waitFor:'null'));
   if(!st){
     // ゲーム開始前（stateを一度も受け取っていない）はnullを無視
     if(!_stateEverReceived) return;
@@ -1565,11 +1575,8 @@ function onState(st){
   }
   if(st.waitFor===myId){
     hideInfo();
-    // dealOverlay表示中なら renderAction はdealOverlay終了コールバックに任せる
-    var dealOv=document.getElementById('deal-overlay');
-    if(!dealOv||!dealOv.classList.contains('show')){
-      renderAction();
-    }
+    _dbg('→ renderAction() myId='+myId);
+    renderAction(); // 常に呼ぶ（dealOverlay表示中でもapは準備しておく）
   } else if(st.waitFor){
     var curP=players[curIdx];
     if(curP&&curP.isCpu){
