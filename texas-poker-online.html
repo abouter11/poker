@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.25</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.26</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1447,9 +1447,12 @@ function _launch(room){
       showInfo('ゲーム開始中...');
       showDealOverlay(myHole, function(){
         hideInfo();
-        // dealOverlay終了時点で自分のターンなら必ずrenderAction
+        // dealOverlay終了後: 自分のターンなら必ずrenderAction（タイミング問わず）
         if(_lastWaitFor===myId){
+          _dbg('dealOverlay cb: renderAction');
           renderAction();
+        } else {
+          _dbg('dealOverlay cb: wf='+_lastWaitFor+' not my turn');
         }
       });
     }
@@ -1528,12 +1531,12 @@ function _dbg(msg){
   // 最新5行を保持
   var lines=(d.textContent||'').split('\n').filter(Boolean);
   lines.push(msg);
-  if(lines.length>5) lines=lines.slice(-5);
+  if(lines.length>8) lines=lines.slice(-8);
   d.textContent=lines.join('\n');
 }
 function onState(st){
   if(isHost) return;
-  _dbg('path='+gamePath+'/state\n'+(st?'wf='+st.waitFor:'NULL'));
+  _dbg((st?'GOT wf='+st.waitFor+' pot='+st.pot:'NULL'));
   if(!st){
     // NULLはFirebase書き込み中のpolling競合で発生する場合がある
     // ゲーム開始前はnullを無視
@@ -1551,7 +1554,7 @@ function onState(st){
   // 有効なstateを受け取ったのでフラグをセット、nullカウントリセット
   _stateEverReceived = true;
   _nullStateCount = 0;
-  _dbg('STATE wf='+(st.waitFor||'null')+' pot='+st.pot);
+
   var prevPhase=_lastPhase, prevCommLen=_lastCommLen;
   comm=st.comm||[]; pot=st.pot||0; phase=st.phase||0;
   curIdx=st.curIdx||0; curBet=st.curBet||0;
@@ -1585,7 +1588,7 @@ function onState(st){
     var newCards=comm.slice(prevCommLen);
     showPhaseOverlay(PNAMES[phase]||'', newCards, function(){});
   }
-  _dbg('sd='+(!!st.showdown)+' res='+(!!st.result)+' la='+(!!st.lastAction));
+
   if(st.showdown){handleSD(st.showdown);return;}
   if(st.result){
     hideInfo();
@@ -1598,8 +1601,8 @@ function onState(st){
     var la=st.lastAction;
     showActionBubble(la.playerIdx, la.action, la.amount);
   }
-  _lastWaitFor=st.waitFor; // dealOverlay後の再チェック用に記録
-  _dbg('wf='+st.waitFor+' myId='+myId+' match='+(st.waitFor===myId));
+  _lastWaitFor=st.waitFor;
+  _dbg('match='+(st.waitFor===myId)+' wf='+st.waitFor+' me='+myId);
   if(st.waitFor===myId){
     hideInfo();
     renderAction();
@@ -1622,7 +1625,7 @@ function onState(st){
 
 function watchAction(){
   // actionパスのポーリングを停止してから再登録（古いリスナーをクリア）
-  _dbg('watchAction reg lastTs='+lastActTs);
+  _dbg('wA reg rid='+_roundId.substring(0,4));
   fbOff(gamePath+'/action');
   // skipInitial=true: 初回の即時コールバックをスキップし古いデータを無視
   fbListen(gamePath+'/action', function(d){
