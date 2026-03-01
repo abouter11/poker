@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.24</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.25</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1391,6 +1391,7 @@ var PNAMES=['PRE-FLOP','FLOP','TURN','RIVER','SHOWDOWN'];
 var _allInRevealed=false; // ALL IN時のホール公開フラグ
 var _dealOverlayShown=false; // ラウンドごとのdealOverlay表示済みフラグ
 var _roundId=''; // ラウンドごとのユニークID（actionの古さ判定用）
+var _lastWaitFor=null; // 最後に受け取ったwaitFor値（dealOverlay後の再チェック用）
 
 function launchGame(room){
   fbOff(roomPath);
@@ -1446,8 +1447,10 @@ function _launch(room){
       showInfo('ゲーム開始中...');
       showDealOverlay(myHole, function(){
         hideInfo();
-        var apEl=document.getElementById('ap');
-        if(apEl.style.display==='block'){ renderAction(); }
+        // dealOverlay終了時点で自分のターンなら必ずrenderAction
+        if(_lastWaitFor===myId){
+          renderAction();
+        }
       });
     }
   });
@@ -1595,6 +1598,7 @@ function onState(st){
     var la=st.lastAction;
     showActionBubble(la.playerIdx, la.action, la.amount);
   }
+  _lastWaitFor=st.waitFor; // dealOverlay後の再チェック用に記録
   _dbg('wf='+st.waitFor+' myId='+myId+' match='+(st.waitFor===myId));
   if(st.waitFor===myId){
     hideInfo();
@@ -1669,6 +1673,7 @@ function startRound(){
   _cpuQueue=[];_cpuBusy=false;
   _allInRevealed=false;
   _dealOverlayShown=false; // 新ラウンドでdealOverlayを再度表示可能に
+  _lastWaitFor=null; // 新ラウンドでwaitForをリセット
   _commAnimating=false;
   // ラウンドIDを生成（古いactionを確実に区別する）
   _roundId = Math.random().toString(36).slice(2);
