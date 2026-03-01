@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.26</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.27</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1629,13 +1629,17 @@ function watchAction(){
   fbOff(gamePath+'/action');
   // skipInitial=true: 初回の即時コールバックをスキップし古いデータを無視
   fbListen(gamePath+'/action', function(d){
-    _dbg('wA d='+(d?'ts='+d.ts+' rid='+d.rid:'null')+' lastTs='+lastActTs+' curRid='+_roundId);
-    if(!d||!d.ts||d.ts<=lastActTs) return;
-    if(d.rid && d.rid!==_roundId){
-      _dbg('SKIP old rid');
+    if(!d||!d.ts) return;
+    // ridがない（古いフォーマット）またはridが現在のラウンドと不一致はスキップ
+    if(!d.rid || d.rid!==_roundId){
+      _dbg('SKIP rid='+(d.rid||'none')+' cur='+_roundId.substring(0,4));
       return;
     }
-    _dbg('ACTION ok');
+    if(d.ts<=lastActTs){
+      _dbg('SKIP old ts');
+      return;
+    }
+    _dbg('ACTION ok rid='+d.rid.substring(0,4));
     lastActTs=d.ts; curIdx=d.playerIdx;
     applyAction(d); renderAll(); advance();
   }, true);
