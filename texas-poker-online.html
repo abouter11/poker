@@ -71,7 +71,7 @@ body{background:radial-gradient(ellipse at 50%,#1e5535 0%,#0a2010 100%);min-heig
 #ap-info{font-size:11px;color:rgba(255,255,255,.45);}
 #hdisp{display:flex;gap:8px;justify-content:center;margin-bottom:10px;}
 .prow{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap;}
-.pbtn{flex:1;min-width:44px;padding:4px 2px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:5px;color:var(--gold);font-family:Cinzel,serif;font-size:8px;cursor:pointer;text-align:center;}
+.pbtn{flex:1;min-width:44px;padding:4px 2px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:5px;color:var(--gold);font-family:Cinzel,serif;font-size:7px;cursor:pointer;text-align:center;}
 #rrow{display:none;}
 #rrow label{font-size:10px;color:var(--gold);white-space:nowrap;font-family:Cinzel,serif;}
 #rinp{flex:1;background:rgba(0,0,0,.5);border:1px solid rgba(201,168,76,.4);border-radius:7px;padding:7px;color:var(--gold-light);font-family:Cinzel,serif;font-size:14px;outline:none;text-align:center;}
@@ -98,7 +98,7 @@ body{background:radial-gradient(ellipse at 50%,#1e5535 0%,#0a2010 100%);min-heig
 
 /* チップ表示 */
 .chips-stack{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;align-items:center;}
-.chip{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:8px;font-weight:700;border:2px dashed rgba(255,255,255,.5);box-shadow:0 2px 6px rgba(0,0,0,.6),inset 0 1px 3px rgba(255,255,255,.35);position:relative;flex-shrink:0;letter-spacing:-0.5px;}
+.chip{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:7px;font-weight:700;border:2px dashed rgba(255,255,255,.5);box-shadow:0 2px 6px rgba(0,0,0,.6),inset 0 1px 3px rgba(255,255,255,.35);position:relative;flex-shrink:0;letter-spacing:-0.5px;}
 .chip-500{background:radial-gradient(circle at 35% 35%,#b06fe0,#7d3fb5);color:#fff;}
 .chip-100{background:radial-gradient(circle at 35% 35%,#4a6080,#2c3e50);color:#fff;}
 .chip-25{background:radial-gradient(circle at 35% 35%,#27ae60,#1e8449);color:#fff;}
@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.27</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.28</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1440,7 +1440,7 @@ function _launch(room){
     myHole=h;
     if(players[myIdx]) players[myIdx].hole=h;
     renderAll();
-    _dbg('hole isNew='+isNew+' shown='+_dealOverlayShown);
+    _dbg('hole new='+isNew+' sh='+_dealOverlayShown);
     // 新しいホールカード かつ 非ホスト かつ まだこのラウンドでoverlay未表示
     if(isNew && !isHost && !_dealOverlayShown){
       _dealOverlayShown=true;
@@ -1526,12 +1526,12 @@ var _nullStateCount = 0;        // 連続null回数
 function _dbg(msg){
   var d=document.getElementById('_dbgbox');
   if(!d){d=document.createElement('div');d.id='_dbgbox';
-    d.style.cssText='position:fixed;top:50px;right:4px;z-index:9999;background:rgba(0,0,0,.85);color:#0f0;font-size:8px;font-family:monospace;padding:4px 6px;border-radius:4px;max-width:220px;word-break:break-all;line-height:1.4;';
+    d.style.cssText='position:fixed;top:50px;right:4px;z-index:9999;background:rgba(0,0,0,.85);color:#0f0;font-size:7px;font-family:monospace;padding:4px 6px;border-radius:4px;max-width:220px;word-break:break-all;line-height:1.4;';
     document.body.appendChild(d);}
   // 最新5行を保持
   var lines=(d.textContent||'').split('\n').filter(Boolean);
   lines.push(msg);
-  if(lines.length>8) lines=lines.slice(-8);
+  if(lines.length>12) lines=lines.slice(-12);
   d.textContent=lines.join('\n');
 }
 function onState(st){
@@ -1543,7 +1543,7 @@ function onState(st){
     if(!_stateEverReceived) return;
     // ゲーム中のNULLは一時的な競合なので無視（最後の有効なstateを維持）
     _nullStateCount++;
-    _dbg('NULL cnt='+_nullStateCount+' (ignored)');
+    _dbg('- NULL '+_nullStateCount);
     // 長時間NULLが続く場合のみホスト離脱と判断（30回≒45秒）
     if(!_hostLeftDetected && gamePath && _nullStateCount >= 30){
       _hostLeftDetected = true;
@@ -1625,7 +1625,7 @@ function onState(st){
 
 function watchAction(){
   // actionパスのポーリングを停止してから再登録（古いリスナーをクリア）
-  _dbg('wA reg rid='+_roundId.substring(0,4));
+  _dbg('wA'+_roundId.substring(0,4));
   fbOff(gamePath+'/action');
   // skipInitial=true: 初回の即時コールバックをスキップし古いデータを無視
   fbListen(gamePath+'/action', function(d){
@@ -2378,7 +2378,7 @@ function renderAll(){
       stHtml='<div class="sst"></div>';
     }
     var rebuyBadge = (p.rebuyCount&&p.rebuyCount>0)
-      ? '<span style="font-size:8px;background:rgba(255,140,0,.25);border:1px solid rgba(255,140,0,.5);border-radius:4px;padding:1px 4px;color:#fa0;margin-left:4px;vertical-align:middle;">×'+(p.rebuyCount+1)+'</span>'
+      ? '<span style="font-size:7px;background:rgba(255,140,0,.25);border:1px solid rgba(255,140,0,.5);border-radius:4px;padding:1px 4px;color:#fa0;margin-left:4px;vertical-align:middle;">×'+(p.rebuyCount+1)+'</span>'
       : '';
     s.innerHTML='<div class="sname">'+p.name+(p.isMe?' ⭐':'')+rebuyBadge+'</div>'+
       '<div class="schips">'+chipsHTML(p.chips)+'</div>'+
