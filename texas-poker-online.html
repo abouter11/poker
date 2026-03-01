@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.35</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.37</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1590,7 +1590,7 @@ function onState(st){
   } else {
     apEl.style.display='none';
   }
-  _dbg('GOT wf='+(st.waitFor||'null')+' pot='+st.pot);
+  if(st.waitFor!==_lastWaitFor||!_stateEverReceived) _dbg('wf='+(st.waitFor||'null')+' pot='+st.pot+(st.rid?' rid='+st.rid.substring(0,4):''));
   try{ renderAll(); } catch(e){ _dbg('ERR:'+String(e.message||e).substring(0,35)); }
   // 非ホスト: フェーズ変化時にオーバーレイ表示
   if(phase>prevPhase && prevPhase>=0 && phase<=3){
@@ -1866,7 +1866,7 @@ function processCpuQueue(){
     showActionBubble(cpuIdx,dec.action,dec.amount||0);
     renderAll();
     _cpuBusy=false;
-    pushState({lastAction:{playerIdx:cpuIdx,action:dec.action,amount:dec.amount||0}});
+    pushState({lastAction:{playerIdx:cpuIdx,action:dec.action,amount:dec.amount||0},waitFor:players[curIdx]?players[curIdx].pid:null});
     setTimeout(function(){advance();},50);
   }, 800+Math.floor(Math.random()*400));
 }
@@ -2347,18 +2347,21 @@ function renderAll(){
     }
     if(!p.active)return;
     var s=document.createElement('div');s.className='seat';
-    // apVisible時は自分シートをmyturnに（curIdx不問）
-    if(apVisible && p.isMe){ s.classList.add('myturn'); }
-    else if(i===curIdx && !apVisible){ s.classList.add(p.isMe?'myturn':'waiting'); }
-    if(p.folded) s.classList.add('folded');
     if(i===dealerIdx) s.classList.add('dealer');
+    if(p.folded){
+      s.classList.add('folded');
+    } else if(apVisible && p.isMe){
+      s.classList.add('myturn');
+    } else if(i===curIdx && !apVisible){
+      s.classList.add(p.isMe?'myturn':'waiting');
+    }
     // カード表示ロジック:
     // - 自分のカード: 常に表向き
     // - ALL IN中(rundownAllIn実行中): 全参加者表向き
     // - CPU/他プレイヤー: ショーダウン(phase>=4)かつrevealされた場合のみ表向き
     var h;
     if(p.isMe){ h=myHole.length?myHole:p.hole; }
-    else if((phase>=4||_allInRevealed)&&!p.folded&&p.hole&&p.hole.length===2){ h=p.hole; }
+    else if(!p.folded&&(phase>=4||_allInRevealed)&&p.hole&&p.hole.length===2){ h=p.hole; }
     else { h=null; }
     var show=h&&h.length===2;
     var ch=show?(cH(h[0],true)+cH(h[1],true)):(cH(null,true)+cH(null,true));
