@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.33</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.34</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1648,7 +1648,8 @@ function pushState(extra){
     players:players.map(function(p){return{chips:p.chips,bet:p.bet,totalBet:p.totalBet,folded:p.folded,allIn:p.allIn,active:p.active,rebuyCount:p.rebuyCount||0};}),
     comm:comm,pot:pot,phase:phase,curIdx:curIdx,curBet:curBet,
     dealerIdx:dealerIdx,lastRaise:lastRaise,acts:acts,
-    showdown:null,result:null,reveal:null,waitFor:null
+    showdown:null,result:null,reveal:null,waitFor:null,
+    rid:_roundId
   };
   if(extra) Object.keys(extra).forEach(function(k){st[k]=extra[k];});
   var _wf=st.waitFor===null?'NULL':(st.waitFor||'undef');
