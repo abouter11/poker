@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.34</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.35</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1557,6 +1557,11 @@ function onState(st){
   // 有効なstateを受け取ったのでフラグをセット、nullカウントリセット
   _stateEverReceived = true;
   _nullStateCount = 0;
+  // 非ホスト: ホストのroundIdを同期（send()でactionにridを付けるため）
+  if(!isHost && st.rid && st.rid!==_roundId){
+    _roundId=st.rid;
+    _dbg('rid='+_roundId.substring(0,4));
+  }
 
   var prevPhase=_lastPhase, prevCommLen=_lastCommLen;
   comm=st.comm||[]; pot=st.pot||0; phase=st.phase||0;
@@ -1585,6 +1590,7 @@ function onState(st){
   } else {
     apEl.style.display='none';
   }
+  _dbg('GOT wf='+(st.waitFor||'null')+' pot='+st.pot);
   try{ renderAll(); } catch(e){ _dbg('ERR:'+String(e.message||e).substring(0,35)); }
   // 非ホスト: フェーズ変化時にオーバーレイ表示
   if(phase>prevPhase && prevPhase>=0 && phase<=3){
@@ -1628,9 +1634,9 @@ function watchAction(){
   // skipInitial=true: 初回の即時コールバックをスキップし古いデータを無視
   fbListen(gamePath+'/action', function(d){
     if(!d||!d.ts) return;
-    // ridがない（古いフォーマット）またはridが現在のラウンドと不一致はスキップ
-    if(!d.rid || d.rid!==_roundId){
-      _dbg('SKIP rid='+(d.rid||'none')+' cur='+_roundId.substring(0,4));
+    // ridが空（_roundId未設定）またはridが現在のラウンドと不一致はスキップ
+    if(!_roundId || !d.rid || d.rid!==_roundId){
+      _dbg('SKIP rid='+(d.rid||'none')+' cur='+((_roundId||'').substring(0,4)||'?'));
       return;
     }
     if(d.ts<=lastActTs){
