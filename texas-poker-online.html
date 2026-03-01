@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.28</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.30</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1421,7 +1421,7 @@ function _launch(room){
     players.push({name:CPU_NAMES[ci],chips:arr[0]?arr[0].chips:500,pid:'cpu'+ci,isMe:false,idx:idx,isCpu:true,
                   hole:[],bet:0,totalBet:0,folded:false,allIn:false,active:true,rebuyCount:0});
   }
-  _dbg('myIdx='+myIdx+' myId='+myId.substring(0,6));
+  _dbg('myIdx='+myIdx+' pl='+players.length+' myId='+myId.substring(0,6));
   gamePath = roomPath+'/game';
   holePfx  = roomPath+'/holes/';
   if(!_initialChips) _initialChips = arr[0]?arr[0].chips:500;
@@ -1582,7 +1582,7 @@ function onState(st){
   } else {
     apEl.style.display='none';
   }
-  renderAll();
+  try{ renderAll(); } catch(e){ _dbg('rA ERR:'+e.message.substring(0,25)); }
   // 非ホスト: フェーズ変化時にオーバーレイ表示
   if(phase>prevPhase && prevPhase>=0 && phase<=3){
     var newCards=comm.slice(prevCommLen);
@@ -1614,12 +1614,7 @@ function onState(st){
       showInfo((curP?curP.name:'?')+'のアクションを待っています...');
     }
   } else {
-    // waitFor:null = ラウンド開始準備中または次アクション待ち
-    // 「ホストのゲーム開始を待っています...」より適切なメッセージに更新
-    if(_stateEverReceived){
-      hideInfo();
-    }
-    // 初回state受信前はibarをそのまま（launchGame側で設定済み）
+    if(_stateEverReceived){ hideInfo(); }
   }
 }
 
