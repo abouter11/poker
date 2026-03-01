@@ -193,7 +193,7 @@ to{opacity:1;transform:translateX(0) rotateY(0deg);}
 <div id="screen-lobby" class="screen active">
   <div class="logo">TEXAS HOLD'EM</div>
   <div class="logo-sub">ONLINE POKER</div>
-  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.31</div>
+  <div style="font-family:Cinzel,serif;font-size:9px;color:rgba(201,168,76,.4);letter-spacing:2px;text-align:center;margin-top:-8px;margin-bottom:4px;">v2026.02.28.33</div>
   <div id="conn-badge" class="badge b-err">⚠ オフラインモード</div>
   <div class="panel" style="text-align:center;padding:14px 20px;">
     <div class="ptitle">モードを選択</div>
@@ -1392,6 +1392,9 @@ var _allInRevealed=false; // ALL IN時のホール公開フラグ
 var _dealOverlayShown=false; // ラウンドごとのdealOverlay表示済みフラグ
 var _roundId=''; // ラウンドごとのユニークID（actionの古さ判定用）
 var _lastWaitFor=null; // 最後に受け取ったwaitFor値（dealOverlay後の再チェック用）
+var _commAnimating=false; // コミュニティカードアニメーション中フラグ（ホスト・非ホスト共通）
+var _cpuQueue=[]; // CPUターンキュー
+var _cpuBusy=false; // CPU処理中フラグ
 
 function launchGame(room){
   fbOff(roomPath);
